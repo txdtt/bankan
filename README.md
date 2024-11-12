@@ -1,2 +1,2 @@
 # bankan
-Kanban project
+Kanban project in TS/Mongodb
