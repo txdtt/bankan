@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: todo.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: todo.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>"use strict";
+let columnIdCounter = 0;
+let taskIdCounter = 0;
+let columns = [];
+let placeholder = null;
+window.onload = () => {
+    loadTasksFromLocalStorage();
+};
+/** Abre o menu de dialogo para inserir o nome da coluna. */
+function addColumn() {
+    const dialog = document.createElement('div');
+    dialog.id = 'dialog';
+    dialog.className = 'dialog';
+    const dialogContent = document.createElement('div');
+    dialogContent.className = 'dialog-content';
+    const closeButton = document.createElement('span');
+    closeButton.className = 'close';
+    closeButton.textContent = 'x';
+    closeButton.onclick = () => {
+        closeDialog(dialog);
+    };
+    const titleHeader = document.createElement('h2');
+    titleHeader.textContent = 'Add New Column';
+    const titleLabel = document.createElement('label');
+    titleLabel.setAttribute('for', 'columnTitle');
+    titleLabel.textContent = 'Title:';
+    columnIdCounter++;
+    const colId = `column-${columnIdCounter}`;
+    const titleInput = document.createElement('input');
+    titleInput.type = 'text';
+    titleInput.id = colId;
+    titleInput.placeholder = 'Enter column title';
+    const submitButton = document.createElement('button');
+    submitButton.textContent = 'Submit';
+    submitButton.onclick = () => submitColumn(colId);
+    dialogContent.appendChild(closeButton);
+    dialogContent.appendChild(titleHeader);
+    dialogContent.appendChild(titleLabel);
+    dialogContent.appendChild(titleInput);
+    dialogContent.appendChild(submitButton);
+    dialog.appendChild(dialogContent);
+    document.body.appendChild(dialog);
+    titleInput.value = '';
+    dialog.style.display = 'block';
+}
+/**
+* Insere coluna no documento
+* @param {string} colId: id da coluna no formato `column-${columnIdCounter}`
+*/
+function submitColumn(colId) {
+    const titleInput = document.getElementById(colId);
+    const title = titleInput ? titleInput.value.trim() : null;
+    if (titleInput &amp;&amp; title) {
+        columns.push({ id: colId, title, tasks: [] });
+        saveTasksToLocalStorage();
+        renderColumns({ id: colId, title, tasks: [] });
+    }
+    else {
+        console.error('Title cannot be empty');
+    }
+    if (titleInput)
+        titleInput.value = '';
+    const dialog = document.getElementById('dialog');
+    if (dialog) {
+        closeDialog(dialog);
+    }
+    else {
+        console.error('Dialog not found!');
+    }
+}
+/** Adiciona eventListeners para drag-and-drop às colunas. */
+function setupColumnsDragAndDrop() {
+    const columns = document.querySelectorAll('.column');
+    columns.forEach(column => {
+        column.addEventListener('dragover', (e) => handleDragOver(e));
+        column.addEventListener('dragenter', (e) => handleDragEnter(e));
+        column.addEventListener('dragleave', (e) => handleDragLeave(e));
+        column.addEventListener('drop', (e) => handleDrop(e));
+    });
+}
+/**
+* handler para tratar de elementos que estão sendo arrastados e serão inseridos
+* em uma posição na coluna
+* @param {DragEvent} e: DragEvent
+*/
+function handleDragOver(e) {
+    e.preventDefault();
+    if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = 'move';
+    }
+    const column = e.currentTarget;
+    const dragging = document.querySelector('.dragging');
+    if (dragging) {
+        const applyAfter = getNewPosition(column, e.clientY);
+        if (applyAfter &amp;&amp; applyAfter !== placeholder) {
+            applyAfter.insertAdjacentElement('beforebegin', dragging);
+        }
+        else if (!applyAfter &amp;&amp; column.lastElementChild !== placeholder) {
+            column.appendChild(dragging);
+        }
+    }
+}
+/**
+* Calcula nova posicao da task na coluna com base no eixo Y
+* @param {HTMLElementa} column: elemento coluna no documento
+* @param {number} posY: eixo Y
+*/
+function getNewPosition(column, posY) {
+    const elements = Array.prototype.slice.call(column.querySelectorAll('.task:not(.dragging)'));
+    for (const element of elements) {
+        const box = element.getBoundingClientRect();
+        const offset = posY - box.top - box.height / 2;
+        if (offset &lt; 0) {
+            return element;
+        }
+    }
+    return null;
+}
+/**
+* handler para adicionar propriedade 'over' ao elemento HTML
+*/
+function handleDragEnter(e) {
+    const target = e.currentTarget;
+    target.classList.add('over');
+}
+/**
+* handler para remover propriedade 'over' ao elemento HTML
+*/
+function handleDragLeave(e) {
+    const target = e.currentTarget;
+    target.classList.remove('over');
+}
+/**
+* handler para adicionar elemento sendo draggeado e remover propriedade 'over'
+* @param {DragEvent} e: DragEvent
+*/
+function handleDrop(e) {
+    var _a;
+    e.preventDefault();
+    const data = (_a = e.dataTransfer) === null || _a === void 0 ? void 0 : _a.getData('text/plain');
+    let draggedElement;
+    if (data) {
+        draggedElement = document.getElementById(data);
+    }
+    const targetColumn = e.currentTarget;
+    if (draggedElement) {
+        targetColumn.appendChild(draggedElement);
+    }
+    targetColumn.classList.remove('over');
+}
+/**
+* Renderiza colunas no documento
+* @param {column} column: coluna
+*/
+function renderColumns(column) {
+    const itemContainer = document.getElementById('itemContainer');
+    if (!itemContainer) {
+        console.error('Item container not found');
+        return;
+    }
+    const columnElement = document.createElement('div');
+    columnElement.id = column.id;
+    columnElement.classList.add('column');
+    const columnTitle = document.createElement('div');
+    columnTitle.classList.add('columnTitle');
+    columnTitle.textContent = column.title;
+    columnElement.appendChild(columnTitle);
+    column.tasks.forEach(task => {
+        const taskElement = document.createElement('div');
+        taskElement.classList.add('task', 'item');
+        taskElement.setAttribute('draggable', 'true');
+        const taskTitle = document.createElement('div');
+        taskTitle.classList.add('task-title');
+        taskTitle.textContent = task.title;
+        const taskDescription = document.createElement('div');
+        taskDescription.classList.add('task-description');
+        taskDescription.textContent = task.description;
+        taskElement.appendChild(taskTitle);
+        taskElement.appendChild(taskDescription);
+        columnElement.appendChild(taskElement);
+    });
+    itemContainer.appendChild(columnElement);
+    setupColumnsDragAndDrop();
+}
+/** Cria dialogo para adicionar nova task */
+function addTask() {
+    const dialog = document.createElement('div');
+    dialog.id = 'dialog';
+    dialog.className = 'dialog';
+    const dialogContent = document.createElement('div');
+    dialogContent.className = 'dialog-content';
+    const closeButton = document.createElement('span');
+    closeButton.className = 'close';
+    closeButton.textContent = 'x';
+    closeButton.onclick = () => {
+        closeDialog(dialog);
+    };
+    const titleHeader = document.createElement('h2');
+    titleHeader.textContent = 'Add New Task';
+    const titleLabel = document.createElement('label');
+    titleLabel.setAttribute('for', 'taskTitle');
+    titleLabel.textContent = 'Title:';
+    const titleInput = document.createElement('input');
+    titleInput.type = 'text';
+    titleInput.id = 'taskTitle';
+    titleInput.placeholder = 'Enter task title';
+    const descriptionLabel = document.createElement('label');
+    descriptionLabel.setAttribute('for', 'taskDescription');
+    descriptionLabel.textContent = 'Description:';
+    const descriptionInput = document.createElement('input');
+    descriptionInput.type = 'text';
+    descriptionInput.id = 'taskDescription';
+    descriptionInput.placeholder = 'Enter task description';
+    const columnLabel = document.createElement('div');
+    columnLabel.textContent = 'Select Column:';
+    const columnSelect = document.createElement('select');
+    columnSelect.id = 'columnSelect';
+    columns.forEach(column => {
+        const option = document.createElement('option');
+        option.value = column.id;
+        option.textContent = column.title;
+        columnSelect.appendChild(option);
+    });
+    taskIdCounter++;
+    const taskId = `task-${taskIdCounter}`;
+    const submitButton = document.createElement('button');
+    submitButton.textContent = 'Submit';
+    submitButton.onclick = () => submitTask(columnSelect.value, taskId);
+    dialogContent.appendChild(closeButton);
+    dialogContent.appendChild(titleHeader);
+    dialogContent.appendChild(titleLabel);
+    dialogContent.appendChild(titleInput);
+    dialogContent.appendChild(descriptionLabel);
+    dialogContent.appendChild(descriptionInput);
+    dialogContent.appendChild(columnLabel);
+    dialogContent.appendChild(columnSelect);
+    dialogContent.appendChild(submitButton);
+    dialog.appendChild(dialogContent);
+    document.body.appendChild(dialog);
+    dialog.style.display = 'block';
+}
+/*
+* Adiciona elemento task à uma coluna
+* @param {string} columnSelected: coluna selecionada em 'submitTask'
+* @param {string} taskId: id da task
+*/
+function submitTask(columnSelected, taskId) {
+    const titleInput = document.getElementById('taskTitle');
+    const descriptionInput = document.getElementById('taskDescription');
+    const title = titleInput.value.trim() || '';
+    const description = descriptionInput.value.trim() || '';
+    const column = document.getElementById(columnSelected);
+    const taskElement = document.createElement('div');
+    taskElement.classList.add('task', 'item');
+    taskElement.setAttribute('draggable', 'true');
+    taskElement.id = taskId;
+    const taskTitle = document.createElement('div');
+    taskTitle.classList.add('task-title');
+    taskTitle.textContent = title;
+    const taskDescription = document.createElement('div');
+    taskDescription.classList.add('task-description');
+    taskDescription.textContent = description;
+    taskElement.appendChild(taskTitle);
+    taskElement.appendChild(taskDescription);
+    column === null || column === void 0 ? void 0 : column.appendChild(taskElement);
+    const columnData = findColumnById(columns, columnSelected);
+    if (columnData) {
+        columnData.tasks.push({ id: taskId, title, description });
+        saveTasksToLocalStorage();
+    }
+    if (titleInput)
+        titleInput.value = '';
+    if (descriptionInput)
+        descriptionInput.value = '';
+    setupTaskDragAndDrop(taskId, title, description);
+    const dialog = document.getElementById('dialog');
+    if (dialog) {
+        closeDialog(dialog);
+    }
+    else {
+        console.error('Dialog not found!');
+    }
+    return taskElement;
+}
+function findColumnById(columns, columnSelected) {
+    for (let i = 0; i &lt; columns.length; i++) {
+        if (columns[i].id === columnSelected) {
+            return columns[i];
+        }
+    }
+    return undefined;
+}
+/**
+* Adiciona propriedade drag-and-drop às tasks
+* @param {string} taskId: id da task
+* @param {string} title: titulo da task
+* @param {string} description: descricao da task
+*/
+function setupTaskDragAndDrop(taskId, title, description) {
+    const task = document.getElementById(taskId);
+    if (!task) {
+        return;
+    }
+    const parentColumn = task.closest('.column');
+    if (parentColumn) {
+        task.setAttribute('data-column-id', parentColumn.id);
+    }
+    task.addEventListener('dragstart', (e => handleDragStart(e, taskId)));
+    task.addEventListener('dragend', (e => handleDragEnd(e, taskId, title, description)));
+}
+let sourceColumnId = null;
+// FIXAR: ao draggar task em outra coluna pela 1a vez, remoção ocorre com sucesso
+// a partir da segunda,  columnIndex não corresponde com a o índice da coluna
+// atual e taskIndex = -1
+/**
+* handler para quando a task iniciar o processo de drag
+* @param {DragEvent} e: DragEvent
+* @param {string} taskId: id da task
+*/
+function handleDragStart(e, taskId) {
+    const target = e.currentTarget;
+    if (e.dataTransfer) {
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', target.id);
+    }
+    sourceColumnId = target.getAttribute('data-column-id');
+    //console.log(sourceColumnId);
+    //console.log(taskId);
+    if (sourceColumnId) {
+        const columnIndex = columns.findIndex(column => column.id === sourceColumnId);
+        console.log("columnIndex: ", columnIndex);
+        if (columnIndex !== -1) {
+            const taskIndex = columns[columnIndex].tasks.findIndex(task => task.id === taskId);
+            console.log("taskIndex: ", taskIndex);
+            if (taskIndex !== -1) {
+                columns[columnIndex].tasks.splice(taskIndex, 1);
+                console.log(`Removed task at index ${taskIndex} from column ${columnIndex}`);
+            }
+            else {
+                console.error('Task not found!');
+            }
+        }
+        else {
+            console.error('Column not found!');
+        }
+    }
+    target.classList.add('dragging');
+    placeholder = document.createElement('div');
+    placeholder.classList.add('placeholder');
+    placeholder.style.height = `${target.offsetHeight}px`;
+}
+/**
+* handler para quando a task encerrar o processo de drag
+* @param {DragEvent} e: DragEvent
+* @param {string} taskId: id da task
+* @param {string} title: titulo da task
+* @param {string} description: descricao da task
+*/
+function handleDragEnd(e, taskId, title, description) {
+    const dragging = document.querySelector('.dragging');
+    if (dragging &amp;&amp; placeholder) {
+        const targetColumn = e.currentTarget;
+        if (targetColumn) {
+            const columnElement = targetColumn.closest('.column');
+            if (columnElement) {
+                const columnId = columnElement.id;
+                const columnIndex = columns.findIndex(column => column.id === columnId);
+                console.log("columnId: ", columnId);
+                console.log("columnIndex: ", columnIndex);
+                if (columnIndex !== -1) {
+                    columns[columnIndex].tasks.push({ id: taskId, title, description });
+                    console.log(`Pushed task on column ${columnIndex}`);
+                }
+                else {
+                    console.error('Target column not found!');
+                }
+            }
+        }
+        placeholder.replaceWith(dragging);
+        dragging.classList.remove('dragging');
+        placeholder = null;
+    }
+    saveTasksToLocalStorage();
+}
+function closeDialog(dialog) {
+    dialog.remove();
+}
+/** Salva tasks no localStorage */
+function saveTasksToLocalStorage() {
+    const columnsData = JSON.stringify(columns);
+    localStorage.setItem('columns', columnsData);
+}
+// FIXAR: setupTaskAndDrop() não adiciona "drag-and-drop" às tasks após atualizar
+// a página
+/** Carrega tasks do localStorage */
+function loadTasksFromLocalStorage() {
+    const columnsData = localStorage.getItem('columns');
+    if (columnsData) {
+        const savedColumns = JSON.parse(columnsData);
+        columns = savedColumns;
+        savedColumns.forEach(column => {
+            const columnElement = document.getElementById(column.id);
+            column.tasks.forEach(task => {
+                const taskElement = document.createElement('div');
+                taskElement.classList.add('task', 'item');
+                taskElement.setAttribute('draggable', 'true');
+                const taskTitle = document.createElement('div');
+                taskTitle.classList.add('task-title');
+                taskTitle.textContent = task.title;
+                const taskDescription = document.createElement('div');
+                taskDescription.classList.add('task-description');
+                taskDescription.textContent = task.description;
+                taskElement.appendChild(taskTitle);
+                taskElement.appendChild(taskDescription);
+                columnElement === null || columnElement === void 0 ? void 0 : columnElement.appendChild(taskElement);
+                //setupTaskDragAndDrop(task.id, taskElement.title, task.description);
+            });
+            renderColumns(column);
+        });
+    }
+}
+/*
+const searchInput = document.getElementById('searchInput') as HTMLInputElement;
+searchInput.addEventListener('dragover', (event: DragEvent) => {
+    event.preventDefault();
+})
+searchInput.addEventListener('input', searchTask);
+
+function searchTask(event: Event) {
+    const searchTerm = (event.target as HTMLInputElement).value.toLowerCase();
+    const taskItems = document.getElementsByClassName('item');
+
+    if (taskItems) {
+        for (let i = 0; i &lt; taskItems.length; i++) {
+            const taskItem = taskItems[i] as HTMLElement;
+            const taskText = taskItem.querySelector('.item-text')?.textContent?.toLowerCase();
+
+            if (taskText &amp;&amp; taskText.indexOf(searchTerm) > -1) {
+                taskItem.style.display = '';
+            } else {
+                taskItem.style.display = 'none';
+            }
+        }
+    }
+}
+*/
+/*
+function completeTask(event: MouseEvent) {
+    const task = event.target as HTMLElement;
+    task.classList.toggle('completed');
+
+    saveTasksToLocalStorage();
+}
+
+function deleteTask(event: MouseEvent) {
+    const task = (event.target as HTMLElement)?.parentElement?.parentElement;
+
+    if (confirm("Delete?")) {
+        if (task) {
+            taskList?.removeChild(task);
+        }
+    }
+
+    saveTasksToLocalStorage();
+}
+
+function editTask(event: MouseEvent) {
+    const task = (event.target as HTMLElement)?.parentElement?.parentElement;
+    const taskText = task?.querySelector('.item-text') as HTMLElement;
+
+    if (taskText) {
+        taskText.contentEditable = 'true';
+        taskText.focus();
+
+        taskText.addEventListener('keydown', (e: KeyboardEvent) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                taskText.contentEditable = 'false';
+                saveTasksToLocalStorage();
+            }
+        });
+
+        taskText.addEventListener('blur', () => {
+            taskText.contentEditable = 'false';
+            saveTasksToLocalStorage();
+        });
+    }
+}
+*/
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#addColumn">addColumn</a></li><li><a href="global.html#addTask">addTask</a></li><li><a href="global.html#getNewPosition">getNewPosition</a></li><li><a href="global.html#handleDragEnd">handleDragEnd</a></li><li><a href="global.html#handleDragEnter">handleDragEnter</a></li><li><a href="global.html#handleDragLeave">handleDragLeave</a></li><li><a href="global.html#handleDragOver">handleDragOver</a></li><li><a href="global.html#handleDragStart">handleDragStart</a></li><li><a href="global.html#handleDrop">handleDrop</a></li><li><a href="global.html#loadTasksFromLocalStorage">loadTasksFromLocalStorage</a></li><li><a href="global.html#renderColumns">renderColumns</a></li><li><a href="global.html#saveTasksToLocalStorage">saveTasksToLocalStorage</a></li><li><a href="global.html#setupColumnsDragAndDrop">setupColumnsDragAndDrop</a></li><li><a href="global.html#setupTaskDragAndDrop">setupTaskDragAndDrop</a></li><li><a href="global.html#submitColumn">submitColumn</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.3</a> on Sun Oct 13 2024 21:11:27 GMT-0300 (Brasilia Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
