@@ -45,23 +45,6 @@ mongoose_1.default.connect('mongodb://localhost:27017/bankan')
     .catch((error) => {
     console.error('Failed to connect to MongoDB: ', error);
 });
-app.patch('/columns/:id/tasks/reorder', async (req, res) => {
-    try {
-        const columnId = req.params.id;
-        const { tasks } = req.body;
-        console.log('Received columnId:', columnId);
-        console.log('Received tasks:', tasks);
-        const updatedColumn = await Column_1.ColumnModel.findByIdAndUpdate(columnId, { tasks: tasks }, { new: true });
-        if (!updatedColumn) {
-            return res.status(404).json({ message: 'Column not found!' });
-        }
-        res.json(updatedColumn);
-    }
-    catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error updating task order!' });
-    }
-});
 app.post('/columns', async (req, res) => {
     try {
         const newColumn = new Column_1.ColumnModel({
@@ -235,6 +218,23 @@ app.patch('/columns/:id/reorder', async (req, res) => {
             return res.status(404).json({ message: 'Column not found!' });
         }
         console.log('Updated tasks: ', tasks);
+        res.json(updatedColumn);
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error updating task order!' });
+    }
+});
+app.patch('/columns/:id/tasks/reorder', async (req, res) => {
+    try {
+        const columnId = req.params.id;
+        const { tasks } = req.body;
+        console.log('Received columnId:', columnId);
+        console.log('Received tasks:', tasks);
+        const updatedColumn = await Column_1.ColumnModel.findByIdAndUpdate(columnId, { tasks: tasks }, { new: true });
+        if (!updatedColumn) {
+            return res.status(404).json({ message: 'Column not found!' });
+        }
         res.json(updatedColumn);
     }
     catch (error) {

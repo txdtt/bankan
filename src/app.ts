@@ -1,4 +1,4 @@
-import express, { response } from 'express';
+import express  from 'express';
 import { Request, Response } from 'express';
 import mongoose, { Types } from 'mongoose';
 import { ColumnModel } from './model/Column';
@@ -24,32 +24,6 @@ mongoose.connect('mongodb://localhost:27017/bankan')
     .catch((error) => {
         console.error('Failed to connect to MongoDB: ', error);
 });
-
-app.patch('/columns/:id/tasks/reorder', async (req: Request, res: Response) => {
-    try {
-        const columnId = req.params.id;
-        const { tasks } = req.body;
-
-        console.log('Received columnId:', columnId);
-        console.log('Received tasks:', tasks);
-
-        const updatedColumn = await ColumnModel.findByIdAndUpdate(
-            columnId,
-            { tasks: tasks },
-            { new: true }
-        );
-
-        if (!updatedColumn) {
-            return res.status(404).json({ message: 'Column not found!' });
-        }
-
-        res.json(updatedColumn);
-    } catch (error: unknown) {
-        console.error(error); 
-        res.status(500).json({ message: 'Error updating task order!' });
-    }
-});
-
 
 app.post('/columns', async (req: Request, res: Response) => {
     try {
@@ -265,6 +239,32 @@ app.patch('/columns/:id/reorder', async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Error updating task order!' });
     }
 });
+
+app.patch('/columns/:id/tasks/reorder', async (req: Request, res: Response) => {
+    try {
+        const columnId = req.params.id;
+        const { tasks } = req.body;
+
+        console.log('Received columnId:', columnId);
+        console.log('Received tasks:', tasks);
+
+        const updatedColumn = await ColumnModel.findByIdAndUpdate(
+            columnId,
+            { tasks: tasks },
+            { new: true }
+        );
+
+        if (!updatedColumn) {
+            return res.status(404).json({ message: 'Column not found!' });
+        }
+
+        res.json(updatedColumn);
+    } catch (error: unknown) {
+        console.error(error); 
+        res.status(500).json({ message: 'Error updating task order!' });
+    }
+});
+
 
 app.patch('/columns/:columnId/tasks/:taskId', async (req: Request, res: Response) => {
     try {

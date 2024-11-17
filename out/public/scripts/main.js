@@ -793,9 +793,19 @@ async function handleDragEnd(e, task) {
                 const allTasks = columnElement.querySelectorAll('.task');
                 let newIndex = Array.from(allTasks).indexOf(dragging);
                 if (newIndex !== -1) {
-                    columns[columnIndex].tasks.splice(newIndex, 0, { title: task.title, description: task.description, _id: task._id });
-                    await moveTask(sourceColumnId, targetColumnId, task._id);
-                    await updateTaskOrder(targetColumnId, columns[columnIndex].tasks);
+                    if (sourceColumnId === targetColumnId) {
+                        if (task._id) {
+                            const currentIndex = columns[columnIndex].tasks.findIndex((t) => t._id === task._id);
+                            columns[columnIndex].tasks.splice(currentIndex, 1);
+                            columns[columnIndex].tasks.splice(newIndex, 0, { title: task.title, description: task.description, _id: task._id });
+                            await updateTaskOrder(targetColumnId, columns[columnIndex].tasks);
+                        }
+                    }
+                    else {
+                        columns[columnIndex].tasks.splice(newIndex, 0, { title: task.title, description: task.description, _id: task._id });
+                        await moveTask(sourceColumnId, targetColumnId, task._id);
+                        await updateTaskOrder(targetColumnId, columns[columnIndex].tasks);
+                    }
                 }
             }
         }
