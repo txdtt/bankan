@@ -7,7 +7,7 @@ type Column = Document & {
 }
 
 const ColumnSchema: Schema = new Schema({
-    title: { type: String, required: true },
+    title: { type: String, required: true, unique: true },
     tasks: { type: [TaskModel.schema], default: [] },
 });
 

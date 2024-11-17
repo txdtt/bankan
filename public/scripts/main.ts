@@ -1,33 +1,22 @@
 type Task = {
-    id: string;
+    _id?: string;
     title: string;
     description: string;
 }
 
 type Column = {
-    id: string;
+    _id?: string;
     title: string;
     tasks: Task[];
 }
-
-type ColumnData = {
-    title: string;
-    tasks: Task[];
-}
-
-let columnIdCounter = 0;
-
-let taskIdCounter = 0;
 
 let columns: Column[] = [];
 
 let placeholder: HTMLElement | null = null;
 
-let sourceColumnId: string | null = null;
-
 const url = 'http://localhost:3000';
 
-async function getColumns() {
+async function getColumns(): Promise<any[]> {
     const getColumnUrl = url.concat('/columns/');
 
     try {
@@ -36,15 +25,20 @@ async function getColumns() {
             throw new Error(`Response status: ${response.status}`);
         }
         const msg = await response.json();
-        console.log(msg);
+        return msg;
     } catch (error: unknown) {
         if (error instanceof Error) {
             console.error(error.message);
         } 
+        return [];
     }
 }
 
-async function postColumn(columnData: ColumnData) {
+async function loadColumns() {
+    columns = await getColumns();
+}
+
+async function postColumn(newColumn: Column) {
     const postColumnUrl = url.concat('/columns/');
 
     try {
@@ -53,7 +47,7 @@ async function postColumn(columnData: ColumnData) {
             headers: {
                 'Content-type': 'application/json'
             },
-            body: JSON.stringify(columnData)
+            body: JSON.stringify(newColumn)
         });
 
         if (!response.ok) {
@@ -61,7 +55,7 @@ async function postColumn(columnData: ColumnData) {
         }
 
         const result = await response.json();
-        console.log('Column created: ', result);
+        //console.log('Column created: ', result);
     } catch (error: unknown) {
         if (error instanceof Error) {
             console.error('Error posting column: ', error.message);
@@ -69,8 +63,74 @@ async function postColumn(columnData: ColumnData) {
     }
 }
 
-async function patchTasks(columnId: number, newTask: { title: string, description: string }) {
+async function patchColumn(columnId: string, title: string) {
+    const patchColumnUrl = url.concat(`/columns/${columnId}`);
+    try {
+        const response = await fetch(patchColumnUrl, {
+            method: 'PATCH',
+            headers: {
+                'Content-type': 'application/json'
+            },
+            body: JSON.stringify({ title })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to add column. Server responded with ${response.status}`);
+        }
+
+        const updateColumn = await response.json();
+        //console.log('Updated column: ', updateColumn);
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error(error);
+        }
+    }
+}
+
+async function deleteColumn(columnId: string) {
+    const deleteColumnUrl = url.concat(`/columns/${columnId}`);
+
+    try {
+        const response = await fetch(deleteColumnUrl, {
+            method: 'DELETE',
+            headers: {
+                'Content-type': 'application/json'
+            },
+        })
+
+        if (!response.ok) {
+            console.error(`Error deleting column: ${response.status}`);
+        }
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.log(error);
+        }
+    }
+}
+
+async function getTasks(columnId: string) {
+    const getTaskUrl = url.concat(`/columns/${columnId}/tasks`);
+
+    try {
+        const response = await fetch(getTaskUrl);
+        if (!response.ok) {
+            throw new Error(`Response status: ${response.status}`);
+        }
+        const msg = await response.json();
+        //console.log(msg);
+        return msg;
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error(error.message);
+        } 
+        return [];
+    }
+}
+
+async function addTaskInColumn(columnId: string, title: string, description: string) {
     const patchTaskUrl = url.concat(`/columns/${columnId}/tasks`);
+    //const newTask = id ? { id, title, description } : { title, description };
+    const newTask = { title, description };
 
     try {
         const response = await fetch(patchTaskUrl, {
@@ -85,8 +145,8 @@ async function patchTasks(columnId: number, newTask: { title: string, descriptio
             throw new Error(`Failed to add task. Server responded with ${response.status}`);
         }
 
-        const updateColumn = await response.json();
-        console.log('Updated column: ', updateColumn);
+        const updateTask = await response.json();
+        console.log('Updated task: ', updateTask);
     } catch (error: unknown) {
         if (error instanceof Error) {
             console.error('Error adding task: ', error);
@@ -94,27 +154,109 @@ async function patchTasks(columnId: number, newTask: { title: string, descriptio
     }
 }
 
-window.onload = () => {
-    loadFromLocalStorage();
-
-    const taskIdCounterStored = localStorage.getItem('task-id');
-
-    if (taskIdCounterStored) {
-        const savedTaskIdCounter = JSON.parse(taskIdCounterStored);
-        const savedTaskIdCounterToNumber: number = parseInt(savedTaskIdCounter.split('-')[1], 10);
-        const taskIdToNumber = (savedTaskIdCounterToNumber);
-        
-        taskIdCounter = taskIdToNumber;
+async function patchTaskTitle(columnId: string, taskId: string, title: string) {
+    const patchTaskTitleUrl = url.concat(`/columns/${columnId}/tasks/${taskId}`);
+        try {
+            const response = await fetch(patchTaskTitleUrl, {
+                method: 'PATCH',
+                headers: {
+                    'Content-type': 'application/json'
+                },
+                body: JSON.stringify({ title })
+            });
+    
+            if (!response.ok) {
+                throw new Error(`Failed to update task title. Server responded with ${response.status}`);
+            }
+    
+            const updateTaskTitle = await response.json();
+            //console.log('Updated task title: ', updateTaskTitle);
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                console.error(error);
+        }
     }
+}
 
-    const colIdStored = localStorage.getItem('column-id');
-
-    if (colIdStored) {
-        const colIdToNumber: number = parseInt(colIdStored.split('-')[1], 10);
-        columnIdCounter = colIdToNumber;
+async function patchTaskDescription(columnId: string, taskId: string, description: string) {
+    const patchTaskDescriptionUrl = url.concat(`/columns/${columnId}/tasks/${taskId}`);
+        try {
+            const response = await fetch(patchTaskDescriptionUrl, {
+                method: 'PATCH',
+                headers: {
+                    'Content-type': 'application/json'
+                },
+                body: JSON.stringify({ description })
+            });
+    
+            if (!response.ok) {
+                throw new Error(`Failed to update task description. Server responded with ${response.status}`);
+            }
+    
+            const updateTaskTitle = await response.json();
+            //console.log('Updated task description: ', updateTaskTitle);
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                console.error(error);
+        }
     }
+}
 
-    getColumns();
+async function deleteTask(columnId: string, taskId: string) {
+    const deleteTaskUrl = url.concat(`/columns/${columnId}/tasks/${taskId}`)
+    console.log('(deleteTask) columnId: ', columnId, 'taskId: ', taskId);
+
+    try {
+        const response = await fetch(deleteTaskUrl, {
+            method: 'DELETE',
+            headers: {
+                'Content-type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error deleting the task: ${response.status}`);
+        }
+
+        console.log('Task deleted succesfully!');
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.log(error);
+        }
+    }
+}
+
+async function updateTaskOrder(columnId: string, tasks: Task[]) {
+    const updateTaskOrderUrl = url.concat(`/columns/${columnId}/tasks/reorder`);
+
+    try {
+        const response = await fetch(updateTaskOrderUrl, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ tasks })
+        }); 
+
+        if (!response.ok) {
+            throw new Error(`Error updating task order: ${response.statusText}`);
+        }
+    
+        console.log('Task order updated successfully'); 
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error('updateTaskOrder: ', error);
+        }
+    }
+}
+
+window.onload = async () => {
+    await loadColumns();
+    setupColumnsDragAndDrop();
+    columns.forEach(column => {
+        renderColumn(column);
+        column.tasks.forEach(task => setupTaskDragAndDrop(task));
+    })
 }
 
 /** Abre o menu de dialogo para inserir o nome da coluna. */
@@ -140,17 +282,14 @@ function addColumn() {
     titleLabel.setAttribute('for', 'columnTitle');
     titleLabel.textContent = 'Title:';
 
-    const colId = `column-${columnIdCounter}`;
-
     const titleInput = document.createElement('input');
     titleInput.type = 'text';
-    titleInput.id = colId;
     titleInput.placeholder = 'Enter column title';
 
     const submitButton = document.createElement('button');
     submitButton.textContent = 'Submit';
 
-    submitButton.onclick = () => submitColumn(colId);
+    submitButton.onclick = () => submitColumn(titleInput);
 
     dialogContent.appendChild(closeButton);
     dialogContent.appendChild(titleHeader);
@@ -171,22 +310,25 @@ function addColumn() {
 * Insere coluna no documento
 * @param {string} colId: id da coluna no formato `column-${columnIdCounter}`
 */
-function submitColumn(colId: string) {
-    console.log(colId);
-    const titleInput = document.getElementById(colId) as HTMLInputElement;
-
-    const title = titleInput ? titleInput.value.trim() : null;
+async function submitColumn(titleInput: HTMLInputElement) {
+    const title = titleInput.value; 
 
     if (titleInput && title) {
-        columns.push({ id: colId, title, tasks: [] });
-
         const columnData = {title, tasks: []};
 
-        postColumn(columnData);
+        await postColumn(columnData);
 
-        saveToLocalStorage();
+        await loadColumns();
 
-        renderColumns({id: colId, title, tasks: [] });
+        const columnToRender = columns.find(column => column.title === title);
+
+        if (columnToRender) {
+            renderColumn(columnToRender);
+        } else {
+            console.log('Column does not exist: ', columnToRender);
+            return null;
+        }
+
     } else {
         console.error('Title cannot be empty');
     }
@@ -199,10 +341,6 @@ function submitColumn(colId: string) {
     } else {
         console.error('Dialog not found!');
     }
-
-    columnIdCounter++;
-    const colIdToString = JSON.stringify(colId);
-    localStorage.setItem('column-id', colIdToString);
 }
 
 /** Adiciona eventListeners para drag-and-drop às colunas. */
@@ -303,7 +441,7 @@ function handleDrop(e: DragEvent) {
 * Renderiza colunas no documento
 * @param {column} column: coluna
 */
-function renderColumns(column: { id: string, title: string, tasks: Task[] }) {
+function renderColumn(column: Column) {
     const itemContainer = document.getElementById('itemContainer');
 
     if (!itemContainer) {
@@ -312,8 +450,14 @@ function renderColumns(column: { id: string, title: string, tasks: Task[] }) {
     }
 
     const columnElement = document.createElement('div');
-    columnElement.id = column.id;
     columnElement.classList.add('column');
+
+    const columnId = column._id;
+    //console.log('(renderColumn) columnId: ', columnId);
+
+    if (columnId) {
+        columnElement.id = columnId;
+    }
 
     const columnTitle = document.createElement('div');
     columnTitle.classList.add('columnTitle');
@@ -358,14 +502,19 @@ function renderColumns(column: { id: string, title: string, tasks: Task[] }) {
                     columnTitle.textContent = inputTitle.value;
                     columnDialog.style.display = 'none';
 
-                    const columnIndex = columns.findIndex(col => col.id === column.id);
+                    const columnIndex = columns.findIndex(col => col._id === column._id);
+
+                    if (column._id) {
+                        patchColumn(column._id, inputTitle.value);
+                    }
+
+
                     if (columnIndex !== -1) {
                         columns.splice(columnIndex, 1, {
                             ...columns[columnIndex],
                             title: inputTitle.value
                         })
 
-                        saveToLocalStorage();
                     }
                 }
 
@@ -374,50 +523,36 @@ function renderColumns(column: { id: string, title: string, tasks: Task[] }) {
                         columnTitle.textContent = inputTitle.value;
                         columnDialog.style.display = 'none';
 
-                        const columnIndex = columns.findIndex(col => col.id === column.id);
+                        const columnIndex = columns.findIndex(col => col._id === column._id);
                         if (columnIndex !== -1) {
                             columns.splice(columnIndex, 1, {
                                 ...columns[columnIndex],
                                 title: inputTitle.value
                             })
 
-                            saveToLocalStorage();
                         }
                     }
                 })
             }
 
-            const deleteColumn = document.createElement('button');
-            deleteColumn.innerHTML = 'Delete';
+            const deleteColumnButton = document.createElement('button');
+            deleteColumnButton.innerHTML = 'Delete';
 
-            deleteColumn.onclick = () => {
-                const columnIndex = columns.findIndex(col => col.id === column.id);
-                columnIdCounter--;
-                const colId = `column-${columnIdCounter}`;
+            deleteColumnButton.onclick = async () => {
+                const columnIndex = columns.findIndex(col => col._id === column._id);
 
-                const colIdToString = JSON.stringify(colId);
-                localStorage.setItem('column-id', colIdToString);
-
-                taskIdCounter -= columns[columnIndex].tasks.length;
-                const taskId = `task-${taskIdCounter}`;
-                const taskIdToString= JSON.stringify(taskId);
-                localStorage.setItem('task-id', taskIdToString);
-
-                if (columnIndex !== -1) {
-                    columns.splice(columnIndex, 1);
+                if (column._id) {
+                    await deleteColumn(column._id);
+                    const columnToBeRemoved = document.getElementById(column._id);
+                    if (columnToBeRemoved) {
+                        columnToBeRemoved.remove();
+                    }
                 }
-
-                const columnToBeRemoved = document.getElementById(column.id);
-                if (columnToBeRemoved) {
-                    columnToBeRemoved.remove();
-                }
-
-                saveToLocalStorage();
             }
 
 
             columnDialog.appendChild(editColumnTitle);
-            columnDialog.appendChild(deleteColumn);
+            columnDialog.appendChild(deleteColumnButton);
 
             menuDots.appendChild(columnDialog);
             columnDialog.style.display = 'block';
@@ -437,7 +572,7 @@ function renderColumns(column: { id: string, title: string, tasks: Task[] }) {
     columnElement.appendChild(columnTitleContainer);
 
     column.tasks.forEach(task => {
-        const taskElement = createTaskElement(task.id, task.title, task.description);
+        const taskElement = createTaskElement(task);
 
         columnElement.appendChild(taskElement);
     })
@@ -448,7 +583,7 @@ function renderColumns(column: { id: string, title: string, tasks: Task[] }) {
 }
 
 /** Cria dialogo para adicionar nova task */
-function addTask() {
+async function addTask() {
     const dialog = document.createElement('div');
     dialog.id = 'dialog';
     dialog.className = 'dialog';
@@ -491,17 +626,17 @@ function addTask() {
 
     columns.forEach(column => {
         const option = document.createElement('option');
-        option.value = column.id;
-        option.textContent = column.title;
-        columnSelect.appendChild(option);
-    })    
-
-    const taskId = `task-${taskIdCounter}`;
+        if (column._id) {
+            option.value = column._id;
+            option.textContent = column.title;
+            columnSelect.appendChild(option);
+        }
+    });
 
     const submitButton = document.createElement('button');
     submitButton.textContent = 'Submit';
     submitButton.onclick = () => submitTask(
-        columnSelect.value, taskId) as HTMLElement;
+        columnSelect.value, titleInput.value, descriptionInput.value) as Promise<HTMLElement>;
 
     dialogContent.appendChild(closeButton);
     dialogContent.appendChild(titleHeader);
@@ -524,61 +659,72 @@ function addTask() {
 * @param {string} columnSelected: coluna selecionada em 'submitTask'
 * @param {string} taskId: id da task
 */
-function submitTask(columnSelected: string, taskId: string): HTMLElement | null {
-    const titleInput = document.getElementById('taskTitle') as HTMLInputElement;
-    const descriptionInput = document.getElementById('taskDescription') as HTMLInputElement;
-
-    const title = titleInput.value.trim() || '';
-    const description = descriptionInput.value.trim() || '';
+async function submitTask(columnSelected: string, title: string, description: string): Promise<HTMLElement | null> {
+    console.log('SUBMIT TASK');
 
     const columnElement = document.getElementById(columnSelected);
-
-    if (!columnElement) return null; 
-
-    const taskElement = createTaskElement(taskId, title, description);
-    columnElement.appendChild(taskElement);
-
-    const columnData = columns.find(column => column.id === columnSelected);
-    if (columnData) {
-        columnData.tasks.push({ id: taskId, title, description });
-
-        // patchTasks(columnSelected)
-
-        saveToLocalStorage();
+    if (!columnElement) {
+        console.error('columnElement is null:', columnElement);
+        return null;
     }
 
-    if (titleInput) titleInput.value = '';
-    if (descriptionInput) descriptionInput.value = '';
+    try {
+        console.log('SUBMIT TASK 2');
+        await addTaskInColumn(columnSelected, title, description);
 
-    setupColumnsDragAndDrop();
-    setupTaskDragAndDrop(taskId, title, description);
+        //console.log('Task patched successfully.');
 
-    const dialog = document.getElementById('dialog');
-    if (dialog) {
-        dialog.remove();
-    } else {
-        console.error('Dialog not found!');
+        await loadColumns();
+        //console.log('Columns loaded successfully.');
+
+        const columnData = columns.find(column => column._id === columnSelected);
+        if (!columnData) {
+            console.error(`Column with ID ${columnSelected} not found`);
+            return null;
+        }
+
+        const taskToCreate = columnData.tasks.find((task: { title: string }) => task.title === title);
+        if (!taskToCreate) {
+            console.error("Task not found!");
+            return null;
+        }
+
+        const taskElement = createTaskElement(taskToCreate);
+        columnElement.appendChild(taskElement);
+
+        setupColumnsDragAndDrop();
+        setupTaskDragAndDrop(taskToCreate);
+
+        const dialog = document.getElementById('dialog');
+        if (dialog) {
+            dialog.remove();
+        } else {
+            console.error('Dialog not found!');
+        }
+
+        return taskElement;
+
+    } catch (error) {
+        console.error("Error adding task:", error);
+        return null;
     }
-
-    taskIdCounter++;
-    const taskIdToString = JSON.stringify(taskId);
-    localStorage.setItem('task-id', taskIdToString);
-
-    return taskElement;
 }
 
-function createTaskElement(taskId: string, title: string, description: string): HTMLElement {
+function createTaskElement(task: Task): HTMLElement {
     const taskElement = document.createElement('div');
     taskElement.classList.add('task', 'item');
     taskElement.setAttribute('draggable', 'true');
-    taskElement.id = taskId;
+
+    if (task._id) {
+        taskElement.id = task._id;
+    }
 
     const taskHeader = document.createElement('div');
     taskHeader.classList.add('taskHeader');
 
     const taskTitle = document.createElement('div');
     taskTitle.classList.add('taskTitle');
-    taskTitle.textContent = title;
+    taskTitle.textContent = task.title;
 
     const taskDots = document.createElement('div');
     taskDots.classList.add('menuDots');
@@ -590,12 +736,12 @@ function createTaskElement(taskId: string, title: string, description: string): 
 
     const taskDescription = document.createElement('div');
     taskDescription.classList.add('taskDescription');
-    taskDescription.textContent = description;
+    taskDescription.textContent = task.description;
 
     taskElement.appendChild(taskHeader);
     taskElement.appendChild(taskDescription);
 
-    setupTaskDragAndDrop(taskId, title, description);
+    setupTaskDragAndDrop(task);
     setupMenuDialog(taskDots, taskTitle, taskDescription, taskElement);
 
     return taskElement;
@@ -628,29 +774,25 @@ function setupMenuDialog(taskDots: HTMLElement, taskTitle: HTMLElement, taskDesc
                 taskTitle.appendChild(inputTitle);
                 inputTitle.focus();
             
-                const saveTitle = () => {
+                const saveTitle = async () => {
                     taskTitle.textContent = inputTitle.value;
                     taskDialog.style.display = 'none';
             
                     const columnElement = taskElement.parentElement;
                     if (columnElement) {
                         const columnId = columnElement.id;
-                        const columnIndex = columns.findIndex(column => column.id === columnId);
+                        const columnIndex = columns.findIndex(column => column._id === columnId);
                         if (columnIndex !== -1) {
                             const taskId = taskElement.id;
                             if (taskId) {
+                                await patchTaskTitle(columnElement.id, taskId, inputTitle.value);
+
                                 const taskIndex = columns[columnIndex].tasks.findIndex(
-                                    task => task.id === taskId);
+                                    task => task._id === taskId);
 
-                                columns[columnIndex].tasks[taskIndex].title = inputTitle.value;
-                                removeTaskDragAndDrop(columns[columnIndex].tasks[taskIndex].id);
+                                removeTaskDragAndDrop(columns[columnIndex].tasks[taskIndex]);
 
-
-                                setupTaskDragAndDrop(columns[columnIndex].tasks[taskIndex].id,
-                                                    columns[columnIndex].tasks[taskIndex].title,
-                                                    columns[columnIndex].tasks[taskIndex].description);
-
-                                saveToLocalStorage();
+                                setupTaskDragAndDrop(columns[columnIndex].tasks[taskIndex]);
                             }
                         }
                     }
@@ -688,22 +830,18 @@ function setupMenuDialog(taskDots: HTMLElement, taskTitle: HTMLElement, taskDesc
                     const columnElement = taskElement.parentElement;
                     if (columnElement) {
                         const columnId = columnElement.id;
-                        const columnIndex = columns.findIndex(column => column.id === columnId);
+                        patchTaskDescription(columnElement.id, taskElement.id, inputTitle.value);
+                        const columnIndex = columns.findIndex(column => column._id === columnId);
                         if (columnIndex !== -1) {
                             const taskId = taskElement.id;
                             if (taskId) {
                                 const taskIndex = columns[columnIndex].tasks.findIndex(
-                                    task => task.id === taskId);
+                                    task => task._id === taskId);
 
-                                columns[columnIndex].tasks[taskIndex].description = inputTitle.value;
-                                removeTaskDragAndDrop(columns[columnIndex].tasks[taskIndex].id);
+                                removeTaskDragAndDrop(columns[columnIndex].tasks[taskIndex]);
 
+                                setupTaskDragAndDrop(columns[columnIndex].tasks[taskIndex]);
 
-                                setupTaskDragAndDrop(columns[columnIndex].tasks[taskIndex].id,
-                                                    columns[columnIndex].tasks[taskIndex].title,
-                                                    columns[columnIndex].tasks[taskIndex].description);
-
-                                saveToLocalStorage();
                             }
                         }
                     }
@@ -722,33 +860,25 @@ function setupMenuDialog(taskDots: HTMLElement, taskTitle: HTMLElement, taskDesc
                 });
             };
 
-            const deleteTask =  document.createElement('button');
-            deleteTask.innerHTML = 'Delete task';
-            taskDialog.appendChild(deleteTask);
+            const deleteTaskButton = document.createElement('button');
+            deleteTaskButton.innerHTML = 'Delete task';
 
-            deleteTask.onclick = () => {
+            taskDialog.appendChild(deleteTaskButton);
+
+            deleteTaskButton.onclick = async () => {
                 const columnElement = taskElement.parentElement;
                 if (columnElement) {
                     const columnId = columnElement.id;
-                    const columnIndex = columns.findIndex(column => column.id === columnId);
-                    taskIdCounter -= columns[columnIndex].tasks.length;
+                    const columnIndex = columns.findIndex(column => column._id === columnId);
                     if (columnIndex !== -1) {
                         const taskId = taskElement.id;
                         if (taskId) {
-                            const taskIndex = columns[columnIndex].tasks.findIndex(
-                                task => task.id === taskId);
-
-                            const taskIdString = `task-${taskIdCounter}`;
-                            const taskIdToString = JSON.stringify(taskIdString);
-                            localStorage.setItem('task-id', taskIdToString);
-
-                            columns[columnIndex].tasks.splice(taskIndex, 1);
+                            deleteTask(columnElement.id, taskId);
 
                             const taskToBeRemoved = document.getElementById(taskId);
                             if (taskToBeRemoved) {
                                 taskToBeRemoved.remove();
                             }
-                            saveToLocalStorage();
                         }
                     }
                 }
@@ -764,48 +894,53 @@ function setupMenuDialog(taskDots: HTMLElement, taskTitle: HTMLElement, taskDesc
 * @param {string} title: titulo da task 
 * @param {string} description: descricao da task
 */
-function setupTaskDragAndDrop(taskId: string, title: string, description: string) {
-    const task = document.getElementById(taskId);
+function setupTaskDragAndDrop(task: Task) {
+    if (task._id) {
+        const taskElement = document.getElementById(task._id);
 
-    if (!task) {
-        return
+        if (!taskElement) {
+            return
+        }
+
+        const parentColumn = taskElement.closest('.column') as HTMLElement;
+
+        if (parentColumn) {
+            taskElement.setAttribute('data-column-id', parentColumn.id);
+        }
+
+        taskElement.addEventListener('dragstart', (e => 
+                                                handleDragStart(e as DragEvent, task)) as EventListener);
+        taskElement.addEventListener('dragend', (e => 
+                                        handleDragEnd(
+                                            e as DragEvent, task)) as EventListener);
     }
-
-    const parentColumn = task.closest('.column') as HTMLElement;
-
-    if (parentColumn) {
-        task.setAttribute('data-column-id', parentColumn.id);
-    }
-
-    task.addEventListener('dragstart', (e => 
-                                        handleDragStart(e as DragEvent, taskId)) as EventListener);
-    task.addEventListener('dragend', (e => 
-                                      handleDragEnd(
-                                          e as DragEvent, taskId, title, description)) as EventListener);
 }
 
-function removeTaskDragAndDrop(taskId: string) {
-    const task = document.getElementById(taskId);
+function removeTaskDragAndDrop(task: Task) {
+    if (task._id) {
+        const taskElement = document.getElementById(task._id);
 
-    if (!task) {
-        return
+        if (!taskElement) {
+            return
+        }
+
+        const parentColumn = taskElement.closest('.column') as HTMLElement;
+
+        if (parentColumn) {
+            taskElement.setAttribute('data-column-id', parentColumn.id);
+        }
+
+        const clone = taskElement.cloneNode(true) as HTMLElement;
+        taskElement.replaceWith(clone);
     }
-
-    const parentColumn = task.closest('.column') as HTMLElement;
-
-    if (parentColumn) {
-        task.setAttribute('data-column-id', parentColumn.id);
-    }
-
-    const clone = task.cloneNode(true) as HTMLElement;
-    task.replaceWith(clone);
 }
 
 /** 
 * handler para quando a task iniciar o processo de drag
 * @param {DragEvent} e: DragEvent
 */
-function handleDragStart(e: DragEvent, taskId: string) {
+async function handleDragStart(e: DragEvent, task: Task) {
+    //console.log('handleDragStart');
     const target = e.currentTarget as HTMLElement; 
 
     if (e.dataTransfer) {
@@ -813,20 +948,16 @@ function handleDragStart(e: DragEvent, taskId: string) {
         e.dataTransfer.setData('text/plain', target.id); 
     }
 
-    sourceColumnId = target.getAttribute('data-column-id');
-
     const targetColumn = e.currentTarget as HTMLElement;
     if (targetColumn) {
         const columnElement = targetColumn.closest('.column') as HTMLElement;
+        //console.log(columnElement.id);
+        //console.log(task._id);
         if (columnElement) {
-            const columnId = columnElement.id;
-            const columnIndex = columns.findIndex(column => column.id === columnId);
-
-            if (columnIndex !== -1) {
-                const taskIndex = columns[columnIndex].tasks.findIndex(
-                task => task.id === taskId);
-
-                columns[columnIndex].tasks.splice(taskIndex, 1);
+            if (task._id) {
+                console.log('(handleDragStart) task._id: ', task._id);
+                await deleteTask(columnElement.id, task._id);
+                loadColumns();
             }
         }
     }
@@ -836,77 +967,51 @@ function handleDragStart(e: DragEvent, taskId: string) {
     placeholder = document.createElement('div');
     placeholder.classList.add('placeholder');
     placeholder.style.height = `${target.offsetHeight}px`;
+
 }
 
 /** 
 * handler para quando a task encerrar o processo de drag
 * @param {DragEvent} e: DragEvent
-* @param {string} taskId: id da task
-* @param {string} title: titulo da task
-* @param {string} description: descricao da task 
 */
-function handleDragEnd(e: DragEvent, taskId: string, title: string, description: string) {
+async function handleDragEnd(e: DragEvent, task: Task) {
+    //console.log('handleDragEnd')
     const dragging = document.querySelector('.dragging') as HTMLElement | null;
 
-    console.log('(DragEnd) taskId: ', taskId);
-    console.log('(DragEnd) title: ', title);
+    if (task._id) {
+        if (dragging && placeholder) {
+            const targetColumn = e.currentTarget as HTMLElement;
+            const columnElement = targetColumn.closest('.column') as HTMLElement;
 
-    if (dragging && placeholder) {
-        const targetColumn = e.currentTarget as HTMLElement;
-        const columnElement = targetColumn.closest('.column') as HTMLElement;
+            const columnIndex = columns.findIndex(column => column._id === columnElement.id);
 
-        const columnIndex = columns.findIndex(column => column.id === columnElement.id);
+            if (columnIndex !== -1) {
+                if (columnElement !== null) {
+                    const allTasks = columnElement.querySelectorAll('.task');
+                    let newIndex = Array.from(allTasks).indexOf(dragging);
 
-        if (columnIndex !== -1) {
-            if (columnElement !== null) {
-                const allTasks = columnElement.querySelectorAll('.task');
-                let newIndex = Array.from(allTasks).indexOf(dragging);
+                    if (newIndex !== -1) {
+                        //addTaskInColumn(columnElement.id, task.title, task.description, task._id);
+                        addTaskInColumn(columnElement.id, task.title, task.description);
 
-                if (newIndex !== -1) {
-                    columns[columnIndex].tasks.splice(newIndex, 0, 
-                        { id: taskId, title, description });
+                        console.log('columnElement.id: ', columnElement.id);
+                        console.log('column...tasks', columns[columnIndex].tasks);
 
-                    saveToLocalStorage();
+                        //await updateTaskOrder(columnElement.id, columns[columnIndex].tasks);
+                    } else {
+                        console.error('newIndex === -1 !!!');
+                    }
                 } else {
-                    console.error('newIndex === -1 !!!');
+                    console.error('columnElement === null !!!');
                 }
             } else {
-                console.error('columnElement === null !!!');
+                console.error('columnIndex === -1 !!!');
             }
-        } else {
-            console.error('columnIndex === -1 !!!');
+
+            placeholder.replaceWith(dragging);
+            dragging.id = task._id;
+            dragging.classList.remove('dragging');
+            placeholder = null;
         }
-
-        placeholder.replaceWith(dragging);
-        dragging.id = taskId;
-        dragging.classList.remove('dragging');
-        placeholder = null;
-    }
-}
-
-/** Salva tasks no localStorage */
-function saveToLocalStorage() {
-    const columnsData = JSON.stringify(columns);
-
-    localStorage.setItem('columns', columnsData);
-}
-
-/** Carrega tasks do localStorage */
-function loadFromLocalStorage() {
-    const columnsData = localStorage.getItem('columns');
-
-    if (columnsData) {
-        const savedColumns: Column[] = JSON.parse(columnsData);
-        columns = savedColumns;     
-
-        setupColumnsDragAndDrop();
-
-        columns.forEach(column => {
-            renderColumns(column);
-
-            column.tasks.forEach(task => {
-                setupTaskDragAndDrop(task.id, task.title, task.description);
-            });
-        });
     }
 }
