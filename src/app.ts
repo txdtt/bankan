@@ -3,8 +3,15 @@ import { Request, Response } from 'express';
 import mongoose, { Types } from 'mongoose';
 import { ColumnModel } from './model/Column';
 import cors from 'cors';
+import path from 'path';
 
 const app = express();
+
+app.use(express.static(path.join(__dirname, '../public')));
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public', 'index.html'));
+});
 
 app.use(cors());
 
@@ -48,6 +55,62 @@ app.get('/columns', async (req: Request, res: Response) => {
         }
     }
 });
+
+app.patch('/columns/moveTask', async (req: Request, res: Response) => {
+    const { sourceColumnId, targetColumnId, taskId } = req.body;
+
+    if (!sourceColumnId || !targetColumnId || !taskId) {
+        return res.status(400).json({ message: 'Invalid request data!' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(sourceColumnId) || 
+        !mongoose.Types.ObjectId.isValid(targetColumnId) || 
+        !mongoose.Types.ObjectId.isValid(taskId)) {
+        return res.status(400).send('Invalid ObjectId(s) provided');
+    }
+
+    const sourceColumnObjectId = mongoose.Types.ObjectId.createFromHexString(sourceColumnId); 
+    const targetColumnObjectId = mongoose.Types.ObjectId.createFromHexString(targetColumnId); 
+    const taskObjectId = mongoose.Types.ObjectId.createFromHexString(taskId);;
+
+    try {
+        const sourceColumn = await ColumnModel.findById(sourceColumnObjectId);
+
+        if (!sourceColumn) {
+            return res.status(404).json({ message: 'Source column not found!' });
+        }
+
+        const task = sourceColumn.tasks.find((t) => 
+                                             t._id && t._id.toString() === taskObjectId.toString());
+        if (!task) {
+            return res.status(404).json({ message: 'Task not found in source column!' });
+        }
+
+        await ColumnModel.findByIdAndUpdate(
+            sourceColumnObjectId,
+            { $pull: { tasks: { _id: taskObjectId } } },
+            { new: true }
+        );
+
+        const targetColumn = await ColumnModel.findByIdAndUpdate(
+            targetColumnObjectId,
+            { $push: { tasks: task } },
+            { new: true }
+        );
+
+        if (!targetColumn) {
+            return res.status(404).json({ message: 'Target column not found!' });
+        }
+
+        res.status(200).send('Test successful!');
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error('Error moving task:', error);
+            res.status(500).json({ message: 'Server error', details: error.message });
+        }
+    }
+});
+
 
 app.get('/columns/:id', async (req: Request, res: Response) => {
     try {
@@ -127,6 +190,28 @@ app.patch('/columns/:id', async (req: Request, res: Response) => {
         } else {
             return res.status(500).json({ error: 'Error patching column', details: 'Unknown error' });
         }
+    }
+});
+
+app.patch('/columns/:id/tasks/reorder', async (req: Request, res: Response) => {
+    try {
+        const columnId = req.params.id;
+        const { tasks } = req.body;
+
+        const updatedColumn = await ColumnModel.findByIdAndUpdate(
+            columnId,
+            { tasks: tasks },
+            { new: true }
+        );
+
+        if (!updatedColumn) {
+            return res.status(404).json({ message: 'Column not found!' });
+        }
+
+        res.json(updatedColumn);
+    } catch (error: unknown) {
+        console.error(error); 
+        res.status(500).json({ message: 'Error updating task order!' });
     }
 });
 
@@ -229,30 +314,8 @@ app.patch('/columns/:id/tasks', async (req: Request, res: Response) => {
         res.json(column);
     } catch (error: unknown) {
         if (error instanceof Error) {
-
+            console.log(error);
         }
-    }
-});
-
-app.patch('/columns/:id/tasks/reorder', async (req: Request, res: Response) => {
-    try {
-        const columnId = req.params.id;
-        const { tasks } = req.body;
-
-        const updatedColumn = await ColumnModel.findByIdAndUpdate(
-            columnId,
-            { tasks: tasks },
-            { new: true }
-        );
-
-        if (!updatedColumn) {
-            return res.status(404).json({ message: 'Column not found!' });
-        }
-
-        res.json(updatedColumn);
-    } catch (error: unknown) {
-        console.error(error); 
-        res.status(500).json({ message: 'Error updating task order!' });
     }
 });
 

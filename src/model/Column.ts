@@ -1,4 +1,4 @@
-import mongose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document } from 'mongoose';
 import { TaskModel } from './Task';
 
 type Column = Document & {
@@ -11,6 +11,6 @@ const ColumnSchema: Schema = new Schema({
     tasks: { type: [TaskModel.schema], default: [] },
 });
 
-export const ColumnModel = mongose.model<Column>('Column', ColumnSchema);
+export const ColumnModel = mongoose.model<Column>('Column', ColumnSchema);
 
 export default ColumnSchema;

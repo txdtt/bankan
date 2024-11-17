@@ -1,4 +1,4 @@
-import mongose, {Schema, Document} from 'mongoose';
+import mongose, { Schema, Document } from 'mongoose';
 
 type Task = Document & {
     title: string;

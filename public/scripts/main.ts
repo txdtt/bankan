@@ -12,12 +12,14 @@ type Column = {
 
 let columns: Column[] = [];
 
+let sourceColumnId: string | null = null;
+
 let placeholder: HTMLElement | null = null;
 
 const url = 'http://localhost:3000';
 
 async function getColumns(): Promise<any[]> {
-    const getColumnUrl = url.concat('/columns/');
+    const getColumnUrl = url.concat('/columns');
 
     try {
         const response = await fetch(getColumnUrl);
@@ -39,7 +41,7 @@ async function loadColumns() {
 }
 
 async function postColumn(newColumn: Column) {
-    const postColumnUrl = url.concat('/columns/');
+    const postColumnUrl = url.concat('/columns');
 
     try {
         const response = await fetch(postColumnUrl, {
@@ -129,8 +131,7 @@ async function getTasks(columnId: string) {
 
 async function addTaskInColumn(columnId: string, title: string, description: string) {
     const patchTaskUrl = url.concat(`/columns/${columnId}/tasks`);
-    //const newTask = id ? { id, title, description } : { title, description };
-    const newTask = { title, description };
+    const newTask =  { title, description };
 
     try {
         const response = await fetch(patchTaskUrl, {
@@ -247,6 +248,27 @@ async function updateTaskOrder(columnId: string, tasks: Task[]) {
         if (error instanceof Error) {
             console.error('updateTaskOrder: ', error);
         }
+    }
+}
+
+async function moveTask(sourceColumnId: string, targetColumnId: string, taskId: string) {
+    const moveTaskUrl = url.concat('/columns/moveTask');
+
+    try {
+        const response = await fetch(moveTaskUrl, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sourceColumnId, targetColumnId, taskId })
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(`Error moving task: ${response.statusText}`);
+        }
+    
+        console.log('Task order updated successfully'); 
+    } catch (error) {
+        console.error('Error moving task:', error);
     }
 }
 
@@ -660,7 +682,9 @@ async function addTask() {
 * @param {string} taskId: id da task
 */
 async function submitTask(columnSelected: string, title: string, description: string): Promise<HTMLElement | null> {
-    console.log('SUBMIT TASK');
+    //console.log('columnSelect.value:', columnSelected);
+    //console.log('title:', title);
+    //console.log('description:', description);
 
     const columnElement = document.getElementById(columnSelected);
     if (!columnElement) {
@@ -669,9 +693,7 @@ async function submitTask(columnSelected: string, title: string, description: st
     }
 
     try {
-        console.log('SUBMIT TASK 2');
         await addTaskInColumn(columnSelected, title, description);
-
         //console.log('Task patched successfully.');
 
         await loadColumns();
@@ -940,34 +962,27 @@ function removeTaskDragAndDrop(task: Task) {
 * @param {DragEvent} e: DragEvent
 */
 async function handleDragStart(e: DragEvent, task: Task) {
-    //console.log('handleDragStart');
-    const target = e.currentTarget as HTMLElement; 
+    const target = e.currentTarget as HTMLElement;
 
     if (e.dataTransfer) {
         e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', target.id); 
-    }
-
-    const targetColumn = e.currentTarget as HTMLElement;
-    if (targetColumn) {
-        const columnElement = targetColumn.closest('.column') as HTMLElement;
-        //console.log(columnElement.id);
-        //console.log(task._id);
-        if (columnElement) {
-            if (task._id) {
-                console.log('(handleDragStart) task._id: ', task._id);
-                await deleteTask(columnElement.id, task._id);
-                loadColumns();
-            }
+        if (task._id) {
+            e.dataTransfer.setData('taskId', task._id); 
         }
     }
+    
+    const targetColumn = e.currentTarget as HTMLElement;
+    const columnElement = targetColumn.closest('.column') as HTMLElement;
 
-    target.classList.add('dragging'); 
+    if (task._id) {
+        sourceColumnId = columnElement.id; 
+    }
+
+    target.classList.add('dragging');
 
     placeholder = document.createElement('div');
     placeholder.classList.add('placeholder');
     placeholder.style.height = `${target.offsetHeight}px`;
-
 }
 
 /** 
@@ -975,43 +990,26 @@ async function handleDragStart(e: DragEvent, task: Task) {
 * @param {DragEvent} e: DragEvent
 */
 async function handleDragEnd(e: DragEvent, task: Task) {
-    //console.log('handleDragEnd')
-    const dragging = document.querySelector('.dragging') as HTMLElement | null;
+const dragging = document.querySelector('.dragging') as HTMLElement | null;
 
-    if (task._id) {
-        if (dragging && placeholder) {
-            const targetColumn = e.currentTarget as HTMLElement;
-            const columnElement = targetColumn.closest('.column') as HTMLElement;
+    if (dragging && placeholder) {
+        const targetColumn = e.currentTarget as HTMLElement;
+        const columnElement = targetColumn.closest('.column') as HTMLElement;
 
+        if (columnElement && sourceColumnId) {
+            const targetColumnId = columnElement.id;
             const columnIndex = columns.findIndex(column => column._id === columnElement.id);
 
-            if (columnIndex !== -1) {
-                if (columnElement !== null) {
-                    const allTasks = columnElement.querySelectorAll('.task');
-                    let newIndex = Array.from(allTasks).indexOf(dragging);
-
-                    if (newIndex !== -1) {
-                        //addTaskInColumn(columnElement.id, task.title, task.description, task._id);
-                        addTaskInColumn(columnElement.id, task.title, task.description);
-
-                        console.log('columnElement.id: ', columnElement.id);
-                        console.log('column...tasks', columns[columnIndex].tasks);
-
-                        //await updateTaskOrder(columnElement.id, columns[columnIndex].tasks);
-                    } else {
-                        console.error('newIndex === -1 !!!');
-                    }
-                } else {
-                    console.error('columnElement === null !!!');
-                }
-            } else {
-                console.error('columnIndex === -1 !!!');
+            if (task._id) {
+                console.log('task._id: ', task._id);
+                console.log('sourceColumnId: ', sourceColumnId);
+                console.log('targetColumnId: ', targetColumnId);
+                await moveTask(sourceColumnId, targetColumnId, task._id);
             }
-
-            placeholder.replaceWith(dragging);
-            dragging.id = task._id;
-            dragging.classList.remove('dragging');
-            placeholder = null;
         }
+
+        placeholder.replaceWith(dragging);
+        dragging.classList.remove('dragging');
+        placeholder = null;
     }
 }
