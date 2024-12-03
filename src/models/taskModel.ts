@@ -1,6 +1,6 @@
-import mongose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document } from 'mongoose';
 
-type Task = Document & {
+export type Task = Document & {
     title: string;
     description: string;
 }
@@ -10,4 +10,4 @@ const TaskSchema: Schema = new Schema({
     description: { type: String, required: true },
 });
 
-export const TaskModel = mongose.model<Task>('Task', TaskSchema);
+export const TaskModel = mongoose.model<Task>('Task', TaskSchema);

@@ -25,10 +25,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ColumnModel = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
-const Task_1 = require("./Task");
 const ColumnSchema = new mongoose_1.Schema({
     title: { type: String, required: true, unique: true },
-    tasks: { type: [Task_1.TaskModel.schema], default: [] },
+    tasks: [{ type: mongoose_1.default.Schema.Types.ObjectId, ref: 'Task' }],
 });
 exports.ColumnModel = mongoose_1.default.model('Column', ColumnSchema);
 exports.default = ColumnSchema;

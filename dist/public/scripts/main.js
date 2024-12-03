@@ -1,16 +1,14 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const columnModel_1 = require("./models/columnModel");
-const columnService_1 = require("./services/columnService");
-const dragAndDrop_1 = require("./utils/dragAndDrop");
-const columnRenderer_1 = require("./components/columnRenderer");
-const taskRenderer_1 = require("./components/taskRenderer");
+import { columns } from './models/Column';
+import { loadColumns } from './services/ColumnService';
+import { setupColumnsDragAndDrop, setupTaskDragAndDrop } from './utils/DragAndDrop';
+import { renderColumn, submitColumn } from './components/ColumnRenderer';
+import { submitTask } from './components/TaskRenderer';
 window.onload = async () => {
-    await (0, columnService_1.loadColumns)();
-    (0, dragAndDrop_1.setupColumnsDragAndDrop)();
-    columnModel_1.columns.forEach(column => {
-        (0, columnRenderer_1.renderColumn)(column);
-        column.tasks.forEach(task => (0, dragAndDrop_1.setupTaskDragAndDrop)(task));
+    await loadColumns();
+    setupColumnsDragAndDrop();
+    columns.forEach(column => {
+        renderColumn(column);
+        column.tasks.forEach(task => setupTaskDragAndDrop(task));
     });
 };
 function addColumn() {
@@ -35,7 +33,7 @@ function addColumn() {
     titleInput.placeholder = 'Enter column title';
     const submitButton = document.createElement('button');
     submitButton.textContent = 'Submit';
-    submitButton.onclick = () => (0, columnRenderer_1.submitColumn)(titleInput);
+    submitButton.onclick = () => submitColumn(titleInput);
     dialogContent.appendChild(closeButton);
     dialogContent.appendChild(titleHeader);
     dialogContent.appendChild(titleLabel);
@@ -78,7 +76,7 @@ async function addTask() {
     columnLabel.textContent = 'Select Column:';
     const columnSelect = document.createElement('select');
     columnSelect.id = 'columnSelect';
-    columnModel_1.columns.forEach(column => {
+    columns.forEach(column => {
         const option = document.createElement('option');
         if (column._id) {
             option.value = column._id;
@@ -88,7 +86,7 @@ async function addTask() {
     });
     const submitButton = document.createElement('button');
     submitButton.textContent = 'Submit';
-    submitButton.onclick = () => (0, taskRenderer_1.submitTask)(columnSelect.value, titleInput.value, descriptionInput.value);
+    submitButton.onclick = () => submitTask(columnSelect.value, titleInput.value, descriptionInput.value);
     dialogContent.appendChild(closeButton);
     dialogContent.appendChild(titleHeader);
     dialogContent.appendChild(titleLabel);
