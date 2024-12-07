@@ -8,19 +8,21 @@ let placeholder: HTMLElement | null = null;
 
 export function setupColumnsDragAndDrop() {
     const columns = document.querySelectorAll('.column');
-    columns.forEach(column => {
-        column.addEventListener('dragover', (e) => 
-                                handleDragOver(e as DragEvent));
+    if (columns && Array.isArray(columns)) {
+        columns.forEach(column => {
+            column.addEventListener('dragover', (e) => 
+                                    handleDragOver(e as DragEvent));
 
-        column.addEventListener('dragenter', (e) => 
-                                handleDragEnter(e as DragEvent));
+            column.addEventListener('dragenter', (e) => 
+                                    handleDragEnter(e as DragEvent));
 
-        column.addEventListener('dragleave', (e) => 
-                                handleDragLeave(e as DragEvent));
+            column.addEventListener('dragleave', (e) => 
+                                    handleDragLeave(e as DragEvent));
 
-        column.addEventListener('drop', (e) => 
-                                handleDrop(e as DragEvent));
-    });
+            column.addEventListener('drop', (e) => 
+                                    handleDrop(e as DragEvent));
+        });
+    }
 }
 
 export function handleDragOver(e: DragEvent) {

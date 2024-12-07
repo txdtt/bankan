@@ -1,14 +1,15 @@
 import mongoose, { Types } from 'mongoose';
+import TaskModel, { Task } from '../models/taskModel';
 import { ColumnModel, Column } from '../models/columnModel';
-import { Task } from '../models/taskModel';
-
-export const createColumn = async (title: string, tasks: string[]): Promise<Column> => {
-    const newColumn = new ColumnModel({ title, tasks });
-    return await newColumn.save();
-}
+import { describe } from 'node:test';
 
 export const fetchColumns = async () => {
-    return await ColumnModel.find();
+    return await ColumnModel.find().populate('tasks');
+}
+
+export const createColumn = async (title: string): Promise<Column> => {
+    const newColumn = new ColumnModel({ title, tasks: [] });
+    return await newColumn.save();
 }
 
 export const deleteColumns = async () => {
@@ -156,22 +157,38 @@ export const fetchTasksInColumn = async (columnId: string) => {
         return { success: false,  message: 'Column not found!' };
     }
 
-    return column;
+    return { success: true, tasks: column.tasks };
 }
 
-export const addTaskInColumn = async (columnId: string, newTask: Task):
-    Promise<{ success: boolean, message: string }> => {
-    const column = await ColumnModel.findByIdAndUpdate(
-        columnId,
-        { $push: { tasks: newTask } },
-        { new: true }
-    );
+export const addTaskToColumn = async (columnId: string, newTask: Task
+):Promise<{ success: boolean, message: string, task?: Task }> => {
+    try {
+        const task = new TaskModel({
+            title: newTask.title,
+            description: newTask.description
+        });
 
-    if (!column) {
-        return { success: false,  message: 'Column not found!' };
+        const savedTask = await task.save();
+
+        console.log('New task created: ', task);
+
+        const column = await ColumnModel.findByIdAndUpdate(
+            columnId,
+            { $push: { tasks: savedTask._id } },
+            { new: true }
+        );
+
+        if (!column) {
+            return { success: false, message: 'Column not found!' };
+        }
+
+        console.log('Task', task, 'added to: ', column);
+
+        return { success: true, message: 'Task inserted successfully!', task };
+    } catch (error) {
+        console.error(error);
+        return { success: false, message: 'Error inserting task.' };
     }
-
-    return { success: true, message: 'Task inserted successfully!'};
 }
 
 export const deleteTaskInColumn = async (columnId: string, taskId: string) => {

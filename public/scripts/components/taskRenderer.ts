@@ -1,7 +1,7 @@
 import { Task } from '../models/taskModel';
 import { columns } from '../models/columnModel';
 import { setupTaskDragAndDrop, removeTaskDragAndDrop } from '../utils/dragAndDrop';
-import { patchTaskTitle, patchTaskDescription, deleteTask, addTaskInColumn } from '../services/taskService';
+import { patchTaskTitle, patchTaskDescription, deleteTask, addTaskToColumn, getTasks } from '../services/taskService';
 import { loadColumns } from '../services/columnService';
 import { setupColumnsDragAndDrop } from '../utils/dragAndDrop';
 
@@ -191,7 +191,14 @@ export async function submitTask(columnSelected: string, title: string, descript
     }
 
     try {
-        await addTaskInColumn(columnSelected, title, description);
+        const response = await addTaskToColumn(columnSelected, title, description);
+
+        if (!response.success || !response.task) {
+            console.error(response.message);
+            return null;
+        }
+
+        const newTaskId = response.task._id;
 
         await loadColumns();
 
@@ -201,7 +208,7 @@ export async function submitTask(columnSelected: string, title: string, descript
             return null;
         }
 
-        const taskToCreate = columnData.tasks.find((task: { title: string }) => task.title === title);
+        const taskToCreate = columnData.tasks.find(task => task._id === newTaskId);
         if (!taskToCreate) {
             console.error("Task not found!");
             return null;

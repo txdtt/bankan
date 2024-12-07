@@ -3,7 +3,7 @@ import { Task } from '../models/taskModel';
 const url = 'http://localhost:3000';
 
 export async function getTasks(columnId: string) {
-    const getTaskUrl = url.concat(`/columns/${columnId}/tasks`);
+    const getTaskUrl = url.concat(`/api/columns/${columnId}/tasks`);
 
     try {
         const response = await fetch(getTaskUrl);
@@ -11,8 +11,12 @@ export async function getTasks(columnId: string) {
             throw new Error(`Response status: ${response.status}`);
         }
         const msg = await response.json();
-        //console.log(msg);
-        return msg;
+
+        if (msg.success && Array.isArray(msg.tasks)) {
+            return msg.tasks; 
+        }
+
+        return [];
     } catch (error: unknown) {
         if (error instanceof Error) {
             console.error(error.message);
@@ -21,34 +25,39 @@ export async function getTasks(columnId: string) {
     }
 }
 
-export async function addTaskInColumn(columnId: string, title: string, description: string) {
-    const patchTaskUrl = url.concat(`/columns/${columnId}/tasks`);
-    const newTask =  { title, description };
-
+export const addTaskToColumn = async (
+    columnId: string,
+    title: string,
+    description: string
+): Promise<{ success: boolean, message: string, task?: Task }> => {
     try {
-        const response = await fetch(patchTaskUrl, {
+        const response = await fetch(`/api/columns/${columnId}/tasks`, {
             method: 'PATCH',
-            headers: {
-                'Content-type': 'application/json'
-            },
-            body: JSON.stringify(newTask)
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, description }),
         });
 
         if (!response.ok) {
-            throw new Error(`Failed to add task. Server responded with ${response.status}`);
+            throw new Error(`Failed to add task: ${response.statusText}`);
         }
 
-        //const updateTask = await response.json();
-        //console.log('Updated task: ', updateTask);
-    } catch (error: unknown) {
-        if (error instanceof Error) {
-            console.error('Error adding task: ', error);
+        const data = await response.json();
+
+        if (!data.success || !data.task) {
+            console.log(data.message || 'Failed to add task!');
+            return { success: false, message: data.message || 'Failed to add task' };
         }
+
+        return { success: true, message: 'Task added', task: data.task};
+    } catch (error) {
+        console.error(error);
+        return { success: false, message: 'Failed to add task!' };
     }
-}
+};
+
 
 export async function patchTaskTitle(columnId: string, taskId: string, title: string) {
-    const patchTaskTitleUrl = url.concat(`/columns/${columnId}/tasks/${taskId}`);
+    const patchTaskTitleUrl = url.concat(`/api/columns/${columnId}/tasks/${taskId}`);
         try {
             const response = await fetch(patchTaskTitleUrl, {
                 method: 'PATCH',
@@ -72,7 +81,7 @@ export async function patchTaskTitle(columnId: string, taskId: string, title: st
 }
 
 export async function patchTaskDescription(columnId: string, taskId: string, description: string) {
-    const patchTaskDescriptionUrl = url.concat(`/columns/${columnId}/tasks/${taskId}`);
+    const patchTaskDescriptionUrl = url.concat(`/api/columns/${columnId}/tasks/${taskId}`);
         try {
             const response = await fetch(patchTaskDescriptionUrl, {
                 method: 'PATCH',
@@ -96,7 +105,7 @@ export async function patchTaskDescription(columnId: string, taskId: string, des
 }
 
 export async function deleteTask(columnId: string, taskId: string) {
-    const deleteTaskUrl = url.concat(`/columns/${columnId}/tasks/${taskId}`)
+    const deleteTaskUrl = url.concat(`/api/columns/${columnId}/tasks/${taskId}`)
     //console.log('(deleteTask) columnId: ', columnId, 'taskId: ', taskId);
 
     try {
@@ -120,7 +129,7 @@ export async function deleteTask(columnId: string, taskId: string) {
 }
 
 export async function updateTaskOrder(columnId: string, tasks: Task[]) {
-    const updateTaskOrderUrl = url.concat(`/columns/${columnId}/reorder`);
+    const updateTaskOrderUrl = url.concat(`/api/columns/${columnId}/reorder`);
 
     try {
         const response = await fetch(updateTaskOrderUrl, {
@@ -144,7 +153,7 @@ export async function updateTaskOrder(columnId: string, tasks: Task[]) {
 }
 
 export async function moveTask(sourceColumnId: string, targetColumnId: string, taskId: string) {
-    const moveTaskUrl = url.concat('/columns/moveTask');
+    const moveTaskUrl = url.concat('/api/columns/moveTask');
 
     try {
         const response = await fetch(moveTaskUrl, {

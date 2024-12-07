@@ -10,18 +10,19 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../public')));
 
-app.use('/api/columns', columnRoutes);
-
-app.get('/', (_req, res) => {
-    res.sendFile(path.join(__dirname, '../public', 'index.html'));
-});
+app.use(express.static(path.join(__dirname, '..', 'public')));
+app.use(express.static(path.join(__dirname, '..')));
 
 connectDatabase();
 
+app.use('/api/columns', columnRoutes);
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
+});
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
 
 export default app;

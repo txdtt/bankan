@@ -4,16 +4,28 @@ import { setupColumnsDragAndDrop, setupTaskDragAndDrop } from './utils/dragAndDr
 import { renderColumn, submitColumn } from './components/columnRenderer';
 import { submitTask } from './components/taskRenderer';
 
+declare global {
+    interface Window {
+        addColumn: () => void;
+        addTask: () => void;
+    }
+}
+
 window.onload = async () => {
     await loadColumns();
     setupColumnsDragAndDrop();
-    columns.forEach(column => {
-        renderColumn(column);
-        column.tasks.forEach(task => setupTaskDragAndDrop(task));
-    })
+    if (columns && Array.isArray(columns) ) {
+        columns.forEach(column => {
+            renderColumn(column);
+            column.tasks.forEach(task => setupTaskDragAndDrop(task));
+        })
+    }
+
+    window.addColumn = addColumn;
+    window.addTask = addTask;
 }
 
-function addColumn() {
+export function addColumn() {
     const dialog = document.createElement('div');
     dialog.id = 'dialog';
     dialog.className = 'dialog';
@@ -59,7 +71,7 @@ function addColumn() {
     dialog.style.display = 'block';
 }
 
-async function addTask() {
+export async function addTask() {
     const dialog = document.createElement('div');
     dialog.id = 'dialog';
     dialog.className = 'dialog';
@@ -100,14 +112,16 @@ async function addTask() {
     const columnSelect = document.createElement('select');
     columnSelect.id = 'columnSelect';
 
-    columns.forEach(column => {
-        const option = document.createElement('option');
-        if (column._id) {
-            option.value = column._id;
-            option.textContent = column.title;
-            columnSelect.appendChild(option);
-        }
-    });
+    if (columns && Array.isArray(columns)) {
+        columns.forEach(column => {
+            const option = document.createElement('option');
+            if (column._id) {
+                option.value = column._id;
+                option.textContent = column.title;
+                columnSelect.appendChild(option);
+            }
+        });
+    }
 
     const submitButton = document.createElement('button');
     submitButton.textContent = 'Submit';

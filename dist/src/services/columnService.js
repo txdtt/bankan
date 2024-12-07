@@ -15,26 +15,40 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteTaskInColumn = exports.addTaskInColumn = exports.fetchTasksInColumn = exports.editTaskTitle = exports.reorderTasks = exports.updateColumnTitle = exports.deleteColumnById = exports.updateColumn = exports.fetchColumnById = exports.moveTask = exports.deleteColumns = exports.fetchColumns = exports.createColumn = void 0;
+exports.deleteTaskInColumn = exports.addTaskToColumn = exports.fetchTasksInColumn = exports.editTaskTitle = exports.reorderTasks = exports.updateColumnTitle = exports.deleteColumnById = exports.updateColumn = exports.fetchColumnById = exports.moveTask = exports.deleteColumns = exports.createColumn = exports.fetchColumns = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
+const taskModel_1 = __importDefault(require("../models/taskModel"));
 const columnModel_1 = require("../models/columnModel");
-const createColumn = async (title, tasks) => {
-    const newColumn = new columnModel_1.ColumnModel({ title, tasks });
+const fetchColumns = async () => {
+    return await columnModel_1.ColumnModel.find().populate('tasks');
+};
+exports.fetchColumns = fetchColumns;
+const createColumn = async (title) => {
+    const newColumn = new columnModel_1.ColumnModel({ title, tasks: [] });
     return await newColumn.save();
 };
 exports.createColumn = createColumn;
-const fetchColumns = async () => {
-    return await columnModel_1.ColumnModel.find();
-};
-exports.fetchColumns = fetchColumns;
 const deleteColumns = async () => {
     return await columnModel_1.ColumnModel.deleteMany({});
 };
@@ -128,17 +142,30 @@ const fetchTasksInColumn = async (columnId) => {
     if (!column) {
         return { success: false, message: 'Column not found!' };
     }
-    return column;
+    return { success: true, tasks: column.tasks };
 };
 exports.fetchTasksInColumn = fetchTasksInColumn;
-const addTaskInColumn = async (columnId, newTask) => {
-    const column = await columnModel_1.ColumnModel.findByIdAndUpdate(columnId, { $push: { tasks: newTask } }, { new: true });
-    if (!column) {
-        return { success: false, message: 'Column not found!' };
+const addTaskToColumn = async (columnId, newTask) => {
+    try {
+        const task = new taskModel_1.default({
+            title: newTask.title,
+            description: newTask.description
+        });
+        const savedTask = await task.save();
+        console.log('New task created: ', task);
+        const column = await columnModel_1.ColumnModel.findByIdAndUpdate(columnId, { $push: { tasks: savedTask._id } }, { new: true });
+        if (!column) {
+            return { success: false, message: 'Column not found!' };
+        }
+        console.log('Task', task, 'added to: ', column);
+        return { success: true, message: 'Task inserted successfully!', task };
     }
-    return { success: true, message: 'Task inserted successfully!' };
+    catch (error) {
+        console.error(error);
+        return { success: false, message: 'Error inserting task.' };
+    }
 };
-exports.addTaskInColumn = addTaskInColumn;
+exports.addTaskToColumn = addTaskToColumn;
 const deleteTaskInColumn = async (columnId, taskId) => {
     const column = await columnModel_1.ColumnModel.findById(columnId);
     if (!column) {

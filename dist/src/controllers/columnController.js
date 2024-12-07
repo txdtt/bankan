@@ -15,32 +15,26 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteTaskInColumn = exports.addTaskInColumn = exports.getTasksInColumn = exports.editTaskTitle = exports.reorderTasks = exports.updateColumnTitle = exports.deleteColumnById = exports.updateColumn = exports.getColumnById = exports.moveTask = exports.deleteColumns = exports.getColumns = exports.addColumn = void 0;
+exports.deleteTaskInColumn = exports.addTaskToColumn = exports.getTasksInColumn = exports.editTaskTitle = exports.reorderTasks = exports.updateColumnTitle = exports.deleteColumnById = exports.updateColumn = exports.getColumnById = exports.moveTask = exports.deleteColumns = exports.addColumn = exports.getColumns = void 0;
 const columnService = __importStar(require("../services/columnService"));
-const addColumn = async (req, res) => {
-    try {
-        const { title, tasks } = req.body;
-        const newColumn = await columnService.createColumn(title, tasks);
-        res.status(201).send(newColumn);
-    }
-    catch (error) {
-        if (error instanceof Error) {
-            res.status(500).json({ error: 'Failed to create column', details: error.message });
-        }
-        else {
-            res.status(500).json({ error: 'Failed to create column', details: 'Unknown error' });
-        }
-    }
-};
-exports.addColumn = addColumn;
 const getColumns = async (req, res) => {
     try {
         const columns = await columnService.fetchColumns();
@@ -56,6 +50,22 @@ const getColumns = async (req, res) => {
     }
 };
 exports.getColumns = getColumns;
+const addColumn = async (req, res) => {
+    try {
+        const { title } = req.body;
+        const newColumn = await columnService.createColumn(title);
+        res.status(201).send(newColumn);
+    }
+    catch (error) {
+        if (error instanceof Error) {
+            res.status(500).json({ error: 'Failed to create column', details: error.message });
+        }
+        else {
+            res.status(500).json({ error: 'Failed to create column', details: 'Unknown error' });
+        }
+    }
+};
+exports.addColumn = addColumn;
 const deleteColumns = async (req, res) => {
     try {
         const result = await columnService.deleteColumns();
@@ -213,7 +223,7 @@ const getTasksInColumn = async (req, res) => {
     try {
         const columnId = req.params.id;
         const column = await columnService.fetchTasksInColumn(columnId);
-        res.status(200).json(column);
+        return res.status(200).json({ success: true, tasks: column.tasks });
     }
     catch (error) {
         if (error instanceof Error) {
@@ -225,15 +235,19 @@ const getTasksInColumn = async (req, res) => {
     }
 };
 exports.getTasksInColumn = getTasksInColumn;
-const addTaskInColumn = async (req, res) => {
+const addTaskToColumn = async (req, res) => {
     try {
         const columnId = req.params.id;
         const newTask = req.body;
-        const column = await columnService.addTaskInColumn(columnId, newTask);
-        if (!column) {
+        const addedTask = await columnService.addTaskToColumn(columnId, newTask);
+        if (!addedTask) {
             return res.status(404).json({ message: 'Column not found!' });
         }
-        res.json(column);
+        return res.status(200).json({
+            success: true,
+            message: 'Task added successfully!',
+            task: addedTask,
+        });
     }
     catch (error) {
         if (error instanceof Error) {
@@ -241,7 +255,7 @@ const addTaskInColumn = async (req, res) => {
         }
     }
 };
-exports.addTaskInColumn = addTaskInColumn;
+exports.addTaskToColumn = addTaskToColumn;
 const deleteTaskInColumn = async (req, res) => {
     try {
         const columnId = req.params.columnId;

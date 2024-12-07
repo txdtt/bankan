@@ -3,7 +3,7 @@ import { Column, columns } from '../models/columnModel';
 const url = 'http://localhost:3000';
 
 export async function getColumns(): Promise<any[]> {
-    const getColumnUrl = url.concat('/columns');
+    const getColumnUrl = url.concat('/api/columns');
 
     try {
         const response = await fetch(getColumnUrl);
@@ -21,7 +21,7 @@ export async function getColumns(): Promise<any[]> {
 }
 
 export async function postColumn(newColumn: Column) {
-    const postColumnUrl = url.concat('/columns');
+    const postColumnUrl = url.concat('/api/columns');
 
     try {
         const response = await fetch(postColumnUrl, {
@@ -46,7 +46,7 @@ export async function postColumn(newColumn: Column) {
 }
 
 export async function patchColumn(columnId: string, title: string) {
-    const patchColumnUrl = url.concat(`/columns/${columnId}`);
+    const patchColumnUrl = url.concat(`/api/columns/${columnId}`);
     try {
         const response = await fetch(patchColumnUrl, {
             method: 'PATCH',
@@ -70,7 +70,7 @@ export async function patchColumn(columnId: string, title: string) {
 }
 
 export async function deleteColumn(columnId: string) {
-    const deleteColumnUrl = url.concat(`/columns/${columnId}`);
+    const deleteColumnUrl = url.concat(`/api/columns/${columnId}`);
 
     try {
         const response = await fetch(deleteColumnUrl, {

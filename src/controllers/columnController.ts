@@ -1,20 +1,6 @@
 import { Request, Response } from 'express';
 import * as columnService from '../services/columnService';
 
-export const addColumn = async (req: Request, res: Response) => {
-    try {
-        const { title, tasks } = req.body;
-        const newColumn = await columnService.createColumn(title, tasks);
-        res.status(201).send(newColumn);
-    } catch (error: unknown){
-        if (error instanceof Error) {
-            res.status(500).json({ error: 'Failed to create column', details: error.message });
-        } else {
-            res.status(500).json({ error: 'Failed to create column', details: 'Unknown error' });
-        }
-    }
-}
-
 export const getColumns = async (req: Request, res: Response) => {
     try {
         const columns = await columnService.fetchColumns();
@@ -24,6 +10,20 @@ export const getColumns = async (req: Request, res: Response) => {
             res.status(500).json({ error: 'Error fetching columns', details: error.message });
         } else {
             res.status(500).json({ error: 'Error fetching columns', details: 'Unknown error' });
+        }
+    }
+}
+
+export const addColumn = async (req: Request, res: Response) => {
+    try {
+        const { title } = req.body;
+        const newColumn = await columnService.createColumn(title);
+        res.status(201).send(newColumn);
+    } catch (error: unknown){
+        if (error instanceof Error) {
+            res.status(500).json({ error: 'Failed to create column', details: error.message });
+        } else {
+            res.status(500).json({ error: 'Failed to create column', details: 'Unknown error' });
         }
     }
 }
@@ -190,7 +190,7 @@ export const getTasksInColumn = async (req: Request, res: Response) => {
 
         const column = await columnService.fetchTasksInColumn(columnId);
 
-        res.status(200).json(column);
+        return res.status(200).json({ success: true, tasks: column.tasks });
     } catch (error: unknown) {
         if (error instanceof Error) {
             return res.status(500).json({ error: 'Error fetching column', details: error.message });
@@ -200,18 +200,22 @@ export const getTasksInColumn = async (req: Request, res: Response) => {
     }
 }
 
-export const addTaskInColumn = async (req: Request, res: Response) => {
+export const addTaskToColumn = async (req: Request, res: Response) => {
     try {
         const columnId = req.params.id;
         const newTask = req.body;
 
-        const column = await columnService.addTaskInColumn(columnId, newTask);
+        const addedTask = await columnService.addTaskToColumn(columnId, newTask);
 
-        if (!column) {
+        if (!addedTask) {
             return res.status(404).json({ message: 'Column not found!' });
         }
 
-        res.json(column);
+        return res.status(200).json({
+            success: true,
+            message: 'Task added successfully!',
+            task: addedTask,
+        });
     } catch (error: unknown) {
         if (error instanceof Error) {
             console.log(error);

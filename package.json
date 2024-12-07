@@ -1,9 +1,11 @@
 {
   "name": "bankan",
   "version": "1.0.0",
-  "main": "./out/public/scripts/app.js",
+  "main": "./dist/public/scripts/app.js",
   "scripts": {
-    "start": "nodemon ./out/src/app.js"
+    "build": "webpack && npm run build-backend",
+    "build-backend": "tsc --project tsconfig.backend.json",
+    "start": "nodemon ./dist/src/app.js"
   },
   "keywords": [],
   "author": "",
@@ -15,8 +17,18 @@
     "@types/express": "^4.17.0",
     "@types/mongodb": "^4.0.6",
     "@types/mongoose": "^5.11.96",
+    "clean-webpack-plugin": "^4.0.0",
+    "copy-webpack-plugin": "^12.0.2",
+    "css-loader": "^7.1.2",
+    "html-webpack-plugin": "^5.6.3",
     "jsdoc": "^4.0.3",
-    "typescript": "^5.6.3"
+    "node-loader": "^2.1.0",
+    "style-loader": "^4.0.0",
+    "ts-loader": "^9.5.1",
+    "tsconfig-paths-webpack-plugin": "^4.2.0",
+    "typescript": "^5.7.2",
+    "webpack": "^5.97.0",
+    "webpack-cli": "^5.1.4"
   },
   "dependencies": {
     "@types/node": "^22.9.0",

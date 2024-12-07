@@ -132,11 +132,13 @@ export function renderColumn(column: Column) {
 
     columnElement.appendChild(columnTitleContainer);
 
-    column.tasks.forEach(task => {
-        const taskElement = createTaskElement(task);
+    if (column.tasks && Array.isArray(column.tasks)) {
+        column.tasks.forEach(task => {
+            const taskElement = createTaskElement(task);
 
-        columnElement.appendChild(taskElement);
-    })
+            columnElement.appendChild(taskElement);
+        })
+    }
 
     itemContainer.appendChild(columnElement);
 
