@@ -10,10 +10,11 @@ export async function getTasks(columnId: string) {
         if (!response.ok) {
             throw new Error(`Response status: ${response.status}`);
         }
+
         const msg = await response.json();
 
         if (msg.success && Array.isArray(msg.tasks)) {
-            return msg.tasks; 
+            return msg; 
         }
 
         return [];
@@ -29,8 +30,12 @@ export const addTaskToColumn = async (
     columnId: string,
     title: string,
     description: string
-): Promise<{ success: boolean, message: string, task?: Task }> => {
+): Promise<{ success: boolean, message: string }> => {
     try {
+        console.log('columnId: ', columnId);
+        console.log('title: ', title);
+        console.log('description: ', description);
+
         const response = await fetch(`/api/columns/${columnId}/tasks`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
@@ -38,17 +43,10 @@ export const addTaskToColumn = async (
         });
 
         if (!response.ok) {
-            throw new Error(`Failed to add task: ${response.statusText}`);
+            throw new Error(`!response.ok: Failed to add task: ${response.statusText}`);
         }
 
-        const data = await response.json();
-
-        if (!data.success || !data.task) {
-            console.log(data.message || 'Failed to add task!');
-            return { success: false, message: data.message || 'Failed to add task' };
-        }
-
-        return { success: true, message: 'Task added', task: data.task};
+        return { success: true, message: 'Task added' };
     } catch (error) {
         console.error(error);
         return { success: false, message: 'Failed to add task!' };

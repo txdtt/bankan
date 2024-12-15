@@ -147,21 +147,28 @@ const fetchTasksInColumn = async (columnId) => {
 exports.fetchTasksInColumn = fetchTasksInColumn;
 const addTaskToColumn = async (columnId, newTask) => {
     try {
+        if (!mongoose_1.default.Types.ObjectId.isValid(columnId)) {
+            return { success: false, message: 'Invalid column ID format' };
+        }
+        const columnObjectId = new mongoose_1.default.Types.ObjectId(columnId);
         const task = new taskModel_1.default({
             title: newTask.title,
             description: newTask.description
         });
         const savedTask = await task.save();
-        console.log('New task created: ', task);
-        const column = await columnModel_1.ColumnModel.findByIdAndUpdate(columnId, { $push: { tasks: savedTask._id } }, { new: true });
+        if (!savedTask) {
+            return { success: false, message: 'Task could not be saved. ' };
+        }
+        console.log('New task created: ', savedTask);
+        const column = await columnModel_1.ColumnModel.findByIdAndUpdate(columnObjectId, { $push: { tasks: savedTask._id } }, { new: true });
         if (!column) {
             return { success: false, message: 'Column not found!' };
         }
-        console.log('Task', task, 'added to: ', column);
-        return { success: true, message: 'Task inserted successfully!', task };
+        console.log('Task', savedTask, 'added to: ', column);
+        return { success: true, message: 'Task inserted successfully!' };
     }
     catch (error) {
-        console.error(error);
+        console.error('Error inserting task: ', error);
         return { success: false, message: 'Error inserting task.' };
     }
 };

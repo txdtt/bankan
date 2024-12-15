@@ -207,18 +207,19 @@ export const addTaskToColumn = async (req: Request, res: Response) => {
 
         const addedTask = await columnService.addTaskToColumn(columnId, newTask);
 
-        if (!addedTask) {
-            return res.status(404).json({ message: 'Column not found!' });
+        if (!addedTask.success) {
+            return res.status(404).json({ message: addedTask.message });
         }
 
         return res.status(200).json({
             success: true,
-            message: 'Task added successfully!',
-            task: addedTask,
+            message: addedTask.message,
         });
+
     } catch (error: unknown) {
         if (error instanceof Error) {
-            console.log(error);
+            console.error('Error in addTaskToColumn controller:', error);
+            return res.status(500).json({ message: 'Internal Server Error' });
         }
     }
 }

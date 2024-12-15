@@ -17,11 +17,11 @@ router.patch('/:id', columnController.updateColumnTitle);
 
 router.patch('/:id/reorder', columnController.reorderTasks);
 
-router.patch('/:id/tasks', columnController.editTaskTitle);
-
 router.get('/:id/tasks', columnController.getTasksInColumn);
 
 router.patch('/:id/tasks', columnController.addTaskToColumn);
+
+router.patch('/:id/tasks/:taskId', columnController.editTaskTitle);
 
 router.delete('/:columnId/tasks/:taskId', columnController.deleteTaskInColumn);
 

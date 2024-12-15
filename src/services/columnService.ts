@@ -1,4 +1,4 @@
-import mongoose, { Types } from 'mongoose';
+import mongoose, { mongo, Types } from 'mongoose';
 import TaskModel, { Task } from '../models/taskModel';
 import { ColumnModel, Column } from '../models/columnModel';
 import { describe } from 'node:test';
@@ -161,8 +161,14 @@ export const fetchTasksInColumn = async (columnId: string) => {
 }
 
 export const addTaskToColumn = async (columnId: string, newTask: Task
-):Promise<{ success: boolean, message: string, task?: Task }> => {
+):Promise<{ success: boolean, message: string }> => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(columnId)) {
+            return { success: false, message: 'Invalid column ID format' };
+        }
+
+        const columnObjectId = new mongoose.Types.ObjectId(columnId);
+
         const task = new TaskModel({
             title: newTask.title,
             description: newTask.description
@@ -170,10 +176,14 @@ export const addTaskToColumn = async (columnId: string, newTask: Task
 
         const savedTask = await task.save();
 
-        console.log('New task created: ', task);
+        if (!savedTask) {
+            return { success: false, message: 'Task could not be saved. '};
+        }
+
+        console.log('New task created: ', savedTask);
 
         const column = await ColumnModel.findByIdAndUpdate(
-            columnId,
+            columnObjectId,
             { $push: { tasks: savedTask._id } },
             { new: true }
         );
@@ -182,11 +192,11 @@ export const addTaskToColumn = async (columnId: string, newTask: Task
             return { success: false, message: 'Column not found!' };
         }
 
-        console.log('Task', task, 'added to: ', column);
+        console.log('Task', savedTask, 'added to: ', column);
 
-        return { success: true, message: 'Task inserted successfully!', task };
+        return { success: true, message: 'Task inserted successfully!' };
     } catch (error) {
-        console.error(error);
+        console.error('Error inserting task: ', error);
         return { success: false, message: 'Error inserting task.' };
     }
 }

@@ -185,6 +185,7 @@ export function setupMenuDialog(taskDots: HTMLElement, taskTitle: HTMLElement, t
 
 export async function submitTask(columnSelected: string, title: string, description: string): Promise<HTMLElement | null> {
     const columnElement = document.getElementById(columnSelected);
+
     if (!columnElement) {
         console.error('columnElement is null:', columnElement);
         return null;
@@ -193,12 +194,10 @@ export async function submitTask(columnSelected: string, title: string, descript
     try {
         const response = await addTaskToColumn(columnSelected, title, description);
 
-        if (!response.success || !response.task) {
-            console.error(response.message);
+        if (!response.success) {
+            console.error('Error: response.success === false');
             return null;
         }
-
-        const newTaskId = response.task._id;
 
         await loadColumns();
 
@@ -208,7 +207,7 @@ export async function submitTask(columnSelected: string, title: string, descript
             return null;
         }
 
-        const taskToCreate = columnData.tasks.find(task => task._id === newTaskId);
+        const taskToCreate = columnData.tasks.find(task => task.title === title);
         if (!taskToCreate) {
             console.error("Task not found!");
             return null;
