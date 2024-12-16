@@ -1,6 +1,6 @@
 import { Task } from '../models/taskModel';
 import { columns } from '../models/columnModel';
-import { updateTaskOrder, moveTask } from '../services/taskService';
+import { updateTaskOrder, moveTask, deleteTask } from '../services/taskService';
 
 let sourceColumnId: string | null = null;
 
@@ -8,21 +8,19 @@ let placeholder: HTMLElement | null = null;
 
 export function setupColumnsDragAndDrop() {
     const columns = document.querySelectorAll('.column');
-    if (columns && Array.isArray(columns)) {
-        columns.forEach(column => {
-            column.addEventListener('dragover', (e) => 
+    columns.forEach(column => {
+        column.addEventListener('dragover', (e) => 
                                     handleDragOver(e as DragEvent));
 
-            column.addEventListener('dragenter', (e) => 
+        column.addEventListener('dragenter', (e) => 
                                     handleDragEnter(e as DragEvent));
 
-            column.addEventListener('dragleave', (e) => 
+        column.addEventListener('dragleave', (e) => 
                                     handleDragLeave(e as DragEvent));
 
-            column.addEventListener('drop', (e) => 
+        column.addEventListener('drop', (e) => 
                                     handleDrop(e as DragEvent));
-        });
-    }
+    });
 }
 
 export function handleDragOver(e: DragEvent) {
@@ -46,8 +44,9 @@ export function handleDragOver(e: DragEvent) {
 }
 
 export function getNewPosition(column: HTMLElement, posY: number): HTMLElement | null {
-    const elements = Array.prototype.slice.call(column.querySelectorAll
-                                    ('.task:not(.dragging)')) as HTMLElement[];
+    const elements = Array.prototype.slice.call(column
+                                                .querySelectorAll
+                                                ('.task:not(.dragging)')) as HTMLElement[];
 
     for (const element of elements) {
         const box = element.getBoundingClientRect();
@@ -132,6 +131,7 @@ export function removeTaskDragAndDrop(task: Task) {
 */
 export async function handleDragStart(e: DragEvent, task: Task) {
     const target = e.currentTarget as HTMLElement;
+    //console.log('(handleDragStart)');
 
     if (e.dataTransfer) {
         e.dataTransfer.effectAllowed = 'move';
@@ -145,6 +145,7 @@ export async function handleDragStart(e: DragEvent, task: Task) {
 
     if (task._id) {
         sourceColumnId = columnElement.id; 
+        deleteTask(sourceColumnId, task._id);
     }
 
     target.classList.add('dragging');
@@ -160,6 +161,7 @@ export async function handleDragStart(e: DragEvent, task: Task) {
 */
 export async function handleDragEnd(e: DragEvent, task: Task) {
     const dragging = document.querySelector('.dragging') as HTMLElement | null;
+    //console.log('(handleDragEnd)');
 
     if (dragging && placeholder) {
         const targetColumn = e.currentTarget as HTMLElement;
@@ -176,6 +178,7 @@ export async function handleDragEnd(e: DragEvent, task: Task) {
                 if (newIndex !== -1) {
                     if(sourceColumnId === targetColumnId) {
                         if (task._id) {
+                            console.log('sourceColumnId === targetColumnId');
                             const currentIndex = columns[columnIndex].tasks.findIndex(
                                     (t) => t._id === task._id);
                             columns[columnIndex].tasks.splice(currentIndex, 1);
@@ -184,10 +187,10 @@ export async function handleDragEnd(e: DragEvent, task: Task) {
                             await updateTaskOrder(targetColumnId, columns[columnIndex].tasks);
                         }
                     } else {
+                        console.log('sourceColumnId !== targetColumnId');
                         columns[columnIndex].tasks.splice(newIndex, 0, 
                             { title: task.title, description: task.description, _id: task._id });
 
-                        await moveTask(sourceColumnId, targetColumnId, task._id);
                         await updateTaskOrder(targetColumnId, columns[columnIndex].tasks);
                     }
                 }

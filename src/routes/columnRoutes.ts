@@ -7,6 +7,8 @@ router.get('/', columnController.getColumns);
 
 router.post('/', columnController.addColumn);
 
+router.delete('/', columnController.deleteColumns);
+
 router.patch('/moveTask', columnController.moveTask);
 
 router.get('/:id', columnController.getColumnById);

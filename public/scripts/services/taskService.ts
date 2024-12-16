@@ -104,7 +104,6 @@ export async function patchTaskDescription(columnId: string, taskId: string, des
 
 export async function deleteTask(columnId: string, taskId: string) {
     const deleteTaskUrl = url.concat(`/api/columns/${columnId}/tasks/${taskId}`)
-    //console.log('(deleteTask) columnId: ', columnId, 'taskId: ', taskId);
 
     try {
         const response = await fetch(deleteTaskUrl, {
