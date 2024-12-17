@@ -1,6 +1,6 @@
 import { Task } from '../models/taskModel';
 import { columns } from '../models/columnModel';
-import { updateTaskOrder, moveTask, deleteTask } from '../services/taskService';
+import { updateTaskOrder, moveTask, deleteTask, addTaskToColumn } from '../services/taskService';
 
 let sourceColumnId: string | null = null;
 
@@ -131,7 +131,7 @@ export function removeTaskDragAndDrop(task: Task) {
 */
 export async function handleDragStart(e: DragEvent, task: Task) {
     const target = e.currentTarget as HTMLElement;
-    //console.log('(handleDragStart)');
+    console.log('(handleDragStart)');
 
     if (e.dataTransfer) {
         e.dataTransfer.effectAllowed = 'move';
@@ -145,6 +145,7 @@ export async function handleDragStart(e: DragEvent, task: Task) {
 
     if (task._id) {
         sourceColumnId = columnElement.id; 
+        //console.log('sourceColumnId: ', sourceColumnId);
         deleteTask(sourceColumnId, task._id);
     }
 
@@ -178,7 +179,7 @@ export async function handleDragEnd(e: DragEvent, task: Task) {
                 if (newIndex !== -1) {
                     if(sourceColumnId === targetColumnId) {
                         if (task._id) {
-                            console.log('sourceColumnId === targetColumnId');
+                            //console.log('sourceColumnId === targetColumnId');
                             const currentIndex = columns[columnIndex].tasks.findIndex(
                                     (t) => t._id === task._id);
                             columns[columnIndex].tasks.splice(currentIndex, 1);
@@ -187,11 +188,17 @@ export async function handleDragEnd(e: DragEvent, task: Task) {
                             await updateTaskOrder(targetColumnId, columns[columnIndex].tasks);
                         }
                     } else {
-                        console.log('sourceColumnId !== targetColumnId');
-                        columns[columnIndex].tasks.splice(newIndex, 0, 
-                            { title: task.title, description: task.description, _id: task._id });
+                        if (task._id) {
+                            //console.log('sourceColumnId !== targetColumnId');
+                            //await moveTask(sourceColumnId, targetColumnId, task._id);
 
-                        await updateTaskOrder(targetColumnId, columns[columnIndex].tasks);
+                            //console.log('columns (before splice newIndex): ', columns);
+                            columns[columnIndex].tasks.splice(newIndex, 0, 
+                                { _id: task._id, title: task.title, description: task.description });
+                            //console.log('columns (after splice newIndex): ', columns);
+
+                            await updateTaskOrder(targetColumnId, columns[columnIndex].tasks);
+                        }
                     }
                 }
             }

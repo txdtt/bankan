@@ -59,18 +59,25 @@ const moveTask = async (sourceColumnId, targetColumnId, taskId) => {
         !mongoose_1.default.Types.ObjectId.isValid(taskId)) {
         return { success: false, message: 'Invalid ObjectId(s) provided' };
     }
-    const sourceColumnObjectId = mongoose_1.default.Types.ObjectId.createFromHexString(sourceColumnId);
-    const targetColumnObjectId = mongoose_1.default.Types.ObjectId.createFromHexString(targetColumnId);
-    const taskObjectId = mongoose_1.default.Types.ObjectId.createFromHexString(taskId);
+    const sourceColumnObjectId = new mongoose_1.default.Types.ObjectId(sourceColumnId);
+    const targetColumnObjectId = new mongoose_1.default.Types.ObjectId(targetColumnId);
+    const taskObjectId = new mongoose_1.default.Types.ObjectId(taskId);
     const sourceColumn = await columnModel_1.ColumnModel.findById(sourceColumnObjectId);
     if (!sourceColumn) {
         return { success: false, message: 'Source column not found!' };
     }
-    const task = sourceColumn.tasks.find((t) => { var _a; return ((_a = t._id) === null || _a === void 0 ? void 0 : _a.toString()) === taskObjectId.toString(); });
+    const task = sourceColumn.tasks.find((t) => t._id.toString() === taskId);
     if (!task) {
         return { success: false, message: 'Task not found in source column!' };
     }
-    await columnModel_1.ColumnModel.findByIdAndUpdate(sourceColumnObjectId, { $pull: { tasks: { _id: taskObjectId } } }, { new: true });
+    (0, exports.deleteTaskInColumn)(sourceColumnId, taskId);
+    /*
+    await ColumnModel.findByIdAndUpdate(
+        sourceColumnObjectId,
+        { $pull: { tasks: { _id: taskObjectId } } },
+        { new: true }
+    );
+    */
     const targetColumn = await columnModel_1.ColumnModel.findByIdAndUpdate(targetColumnObjectId, { $push: { tasks: task } }, { new: true });
     if (!targetColumn) {
         return { success: false, message: 'Target column not found!' };

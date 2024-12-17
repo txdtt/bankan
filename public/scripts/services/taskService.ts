@@ -53,7 +53,6 @@ export const addTaskToColumn = async (
     }
 };
 
-
 export async function patchTaskTitle(columnId: string, taskId: string, title: string) {
     const patchTaskTitleUrl = url.concat(`/api/columns/${columnId}/tasks/${taskId}`);
         try {
