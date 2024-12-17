@@ -6,8 +6,8 @@
         "moduleResolution": "Node",
         "forceConsistentCasingInFileNames": true, 
         "strict": true,            
-        "outDir": "./dist",
-        "rootDir": "./",
+        "outDir": "../dist",
+        "rootDir": ".",
     },
     "include": [
         "public/scripts/**/*.ts",
