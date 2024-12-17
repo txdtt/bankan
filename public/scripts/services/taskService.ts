@@ -68,8 +68,6 @@ export async function patchTaskTitle(columnId: string, taskId: string, title: st
                 throw new Error(`Failed to update task title. Server responded with ${response.status}`);
             }
     
-            //const updateTaskTitle = await response.json();
-            //console.log('Updated task title: ', updateTaskTitle);
         } catch (error: unknown) {
             if (error instanceof Error) {
                 console.error(error);

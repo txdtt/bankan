@@ -146,7 +146,7 @@ export const editTaskTitle = async (
         task.description = description;
     }
 
-    await column.save();
+    await task.save();
     return { success: true, message: 'Task titled changed successfully!'};
 }
 

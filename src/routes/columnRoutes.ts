@@ -23,7 +23,7 @@ router.get('/:id/tasks', columnController.getTasksInColumn);
 
 router.patch('/:id/tasks', columnController.addTaskToColumn);
 
-router.patch('/:id/tasks/:taskId', columnController.editTaskTitle);
+router.patch('/:columnId/tasks/:taskId', columnController.editTaskTitle);
 
 router.delete('/:columnId/tasks/:taskId', columnController.deleteTaskInColumn);
 
