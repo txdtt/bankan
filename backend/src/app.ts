@@ -1,8 +1,10 @@
 import express  from 'express';
 import cors from 'cors';
 import path from 'path';
-import columnRoutes from './routes/columnRoutes'
-import { connectDatabase } from './config/database'
+import router  from './routes/columnRoutes.js'
+import { connectDatabase } from './config/database.js'
+
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
 const PORT = 3000;
 
@@ -16,7 +18,7 @@ app.use(express.static(path.join(__dirname, '..')));
 
 connectDatabase();
 
-app.use('/api/columns', columnRoutes);
+app.use('/api/columns', router);
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import * as columnService from '../services/columnService';
+import * as columnService from '../services/columnService.js';
 
 export const getColumns = async (req: Request, res: Response) => {
     try {

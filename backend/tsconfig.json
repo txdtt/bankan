@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
-        "target": "es2017", 
-        "module": "CommonJS", 
+        "target": "ESNext", 
+        "module": "ESNext", 
         "outDir": "../dist/src",  
         "rootDir": "./src",      
         "esModuleInterop": true,
@@ -9,7 +9,5 @@
         "strict": true,
         "forceConsistentCasingInFileNames": true
     },
-    "include": [
-        "src/**/*.ts"  
-    ]
+    "include": ["src/**/*.ts"]
 }

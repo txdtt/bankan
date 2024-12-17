@@ -1,7 +1,6 @@
 import mongoose, { mongo, Types } from 'mongoose';
-import TaskModel, { Task } from '../models/taskModel';
-import { ColumnModel, Column } from '../models/columnModel';
-import { describe } from 'node:test';
+import TaskModel, { Task } from '../models/taskModel.js';
+import { ColumnModel, Column } from '../models/columnModel.js';
 
 export const fetchColumns = async () => {
     return await ColumnModel.find().populate('tasks');
