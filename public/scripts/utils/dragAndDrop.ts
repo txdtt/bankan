@@ -2,6 +2,10 @@ import { Task } from '../models/taskModel';
 import { columns } from '../models/columnModel';
 import { updateTaskOrder, moveTask, deleteTask, addTaskToColumn } from '../services/taskService';
 
+
+window.onload = async () => {
+}
+
 let sourceColumnId: string | null = null;
 
 let placeholder: HTMLElement | null = null;
@@ -162,7 +166,6 @@ export async function handleDragStart(e: DragEvent, task: Task) {
 */
 export async function handleDragEnd(e: DragEvent, task: Task) {
     const dragging = document.querySelector('.dragging') as HTMLElement | null;
-    //console.log('(handleDragEnd)');
 
     if (dragging && placeholder) {
         const targetColumn = e.currentTarget as HTMLElement;
@@ -177,29 +180,28 @@ export async function handleDragEnd(e: DragEvent, task: Task) {
                 let newIndex = Array.from(allTasks).indexOf(dragging);
 
                 if (newIndex !== -1) {
-                    if(sourceColumnId === targetColumnId) {
-                        if (task._id) {
-                            //console.log('sourceColumnId === targetColumnId');
-                            const currentIndex = columns[columnIndex].tasks.findIndex(
-                                    (t) => t._id === task._id);
-                            columns[columnIndex].tasks.splice(currentIndex, 1);
-                            columns[columnIndex].tasks.splice(newIndex, 0, 
-                                { title: task.title, description: task.description, _id: task._id });
-                            await updateTaskOrder(targetColumnId, columns[columnIndex].tasks);
+                    const targetTasks = columns[columnIndex].tasks;
+                    if (sourceColumnId === targetColumnId) {
+                        const currentIndex = targetTasks.findIndex((t) => t._id === task._id);
+                        if (currentIndex !== -1) {
+                            targetTasks.splice(currentIndex, 1);
                         }
                     } else {
-                        if (task._id) {
-                            //console.log('sourceColumnId !== targetColumnId');
-                            //await moveTask(sourceColumnId, targetColumnId, task._id);
-
-                            //console.log('columns (before splice newIndex): ', columns);
-                            columns[columnIndex].tasks.splice(newIndex, 0, 
-                                { _id: task._id, title: task.title, description: task.description });
-                            //console.log('columns (after splice newIndex): ', columns);
-
-                            await updateTaskOrder(targetColumnId, columns[columnIndex].tasks);
+                        const sourceColumn = columns.find((col) => col._id === sourceColumnId);
+                        if (sourceColumn) {
+                            sourceColumn.tasks = sourceColumn.tasks.filter((t) => t._id !== task._id);
                         }
                     }
+
+                    if (!targetTasks.find((t) => t._id === task._id)) {
+                        targetTasks.splice(newIndex, 0, {
+                            _id: task._id,
+                            title: task.title,
+                            description: task.description
+                        })
+                    }
+
+                    await updateTaskOrder(targetColumnId, targetTasks);
                 }
             }
         }

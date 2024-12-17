@@ -139,8 +139,6 @@ export async function updateTaskOrder(columnId: string, tasks: Task[]) {
         if (!response.ok) {
             throw new Error(`Error updating task order: ${response.statusText}`);
         }
-    
-        //console.log('Task order updated successfully'); 
     } catch (error: unknown) {
         if (error instanceof Error) {
             console.error('updateTaskOrder: ', error);
