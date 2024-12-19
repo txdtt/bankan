@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import * as columnService from '../services/columnService.js';
 
-export const getColumns = async (req: Request, res: Response) => {
+export const getColumns = async (_: Request, res: Response) => {
     try {
         const columns = await columnService.fetchColumns();
         res.send(columns);
@@ -28,7 +28,7 @@ export const addColumn = async (req: Request, res: Response) => {
     }
 }
 
-export const deleteColumns = async(req: Request, res: Response) => {
+export const deleteColumns = async(_: Request, res: Response) => {
     try {
         const result = await columnService.deleteColumns();
 

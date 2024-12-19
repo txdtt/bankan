@@ -1,5 +1,4 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import { TaskModel } from './taskModel.js';
 
 export type Column = Document & {
     title: string;

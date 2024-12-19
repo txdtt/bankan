@@ -1,4 +1,4 @@
-import mongoose, { mongo, Types } from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import TaskModel, { Task } from '../models/taskModel.js';
 import { ColumnModel, Column } from '../models/columnModel.js';
 
@@ -28,7 +28,6 @@ export const moveTask = async (
 
     const sourceColumnObjectId = new mongoose.Types.ObjectId(sourceColumnId); 
     const targetColumnObjectId = new mongoose.Types.ObjectId(targetColumnId); 
-    const taskObjectId = new mongoose.Types.ObjectId(taskId);
 
     const sourceColumn = await ColumnModel.findById(sourceColumnObjectId);
 
@@ -43,14 +42,6 @@ export const moveTask = async (
     }
 
     deleteTaskInColumn(sourceColumnId, taskId);
-
-    /*
-    await ColumnModel.findByIdAndUpdate(
-        sourceColumnObjectId,
-        { $pull: { tasks: { _id: taskObjectId } } },
-        { new: true }
-    );
-    */
 
     const targetColumn = await ColumnModel.findByIdAndUpdate(
         targetColumnObjectId,

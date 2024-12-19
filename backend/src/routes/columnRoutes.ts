@@ -1,30 +1,30 @@
 import express from 'express';
 import * as columnController from '../controllers/columnController.js';
 
-const router = express.Router();
+const columnRouter = express.Router();
 
-router.get('/', columnController.getColumns);
+columnRouter.get('/', columnController.getColumns);
 
-router.post('/', columnController.addColumn);
+columnRouter.post('/', columnController.addColumn);
 
-router.delete('/', columnController.deleteColumns);
+columnRouter.delete('/', columnController.deleteColumns);
 
-router.patch('/moveTask', columnController.moveTask);
+columnRouter.patch('/moveTask', columnController.moveTask);
 
-router.get('/:id', columnController.getColumnById);
+columnRouter.get('/:id', columnController.getColumnById);
 
-router.delete('/:id', columnController.deleteColumnById);
+columnRouter.delete('/:id', columnController.deleteColumnById);
 
-router.patch('/:id', columnController.updateColumnTitle);
+columnRouter.patch('/:id', columnController.updateColumnTitle);
 
-router.patch('/:id/reorder', columnController.reorderTasks);
+columnRouter.patch('/:id/reorder', columnController.reorderTasks);
 
-router.get('/:id/tasks', columnController.getTasksInColumn);
+columnRouter.get('/:id/tasks', columnController.getTasksInColumn);
 
-router.patch('/:id/tasks', columnController.addTaskToColumn);
+columnRouter.patch('/:id/tasks', columnController.addTaskToColumn);
 
-router.patch('/:columnId/tasks/:taskId', columnController.editTaskTitle);
+columnRouter.patch('/:columnId/tasks/:taskId', columnController.editTaskTitle);
 
-router.delete('/:columnId/tasks/:taskId', columnController.deleteTaskInColumn);
+columnRouter.delete('/:columnId/tasks/:taskId', columnController.deleteTaskInColumn);
 
-export default router;
+export default columnRouter;

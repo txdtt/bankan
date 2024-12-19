@@ -1,7 +1,7 @@
 import express  from 'express';
 import cors from 'cors';
 import path from 'path';
-import router  from './routes/columnRoutes.js'
+import columnRouter  from './routes/columnRoutes.js'
 import { connectDatabase } from './config/database.js'
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
@@ -18,12 +18,13 @@ app.use(express.static(path.join(__dirname, '..')));
 
 connectDatabase();
 
-app.use('/api/columns', router);
+app.use('/api/columns', columnRouter);
+
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
 
-app.get('/', (req, res) => {
+app.get('/', (_, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
 
