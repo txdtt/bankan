@@ -1,10 +1,6 @@
 import { Task } from '../models/taskModel';
 import { columns } from '../models/columnModel';
-import { updateTaskOrder, moveTask, deleteTask, addTaskToColumn } from '../services/taskService';
-
-
-window.onload = async () => {
-}
+import { updateTaskOrder, deleteTask } from '../services/taskService';
 
 let sourceColumnId: string | null = null;
 
@@ -15,25 +11,10 @@ export function setupColumnsDragAndDrop() {
     columns.forEach(column => {
         column.addEventListener('dragover', (e) => 
                                     handleDragOver(e as DragEvent));
-
-        column.addEventListener('dragenter', (e) => 
-                                    handleDragEnter(e as DragEvent));
-
-        column.addEventListener('dragleave', (e) => 
-                                    handleDragLeave(e as DragEvent));
-
-        column.addEventListener('drop', (e) => 
-                                    handleDrop(e as DragEvent));
     });
 }
 
 export function handleDragOver(e: DragEvent) {
-    e.preventDefault(); 
-
-    if (e.dataTransfer) {
-        e.dataTransfer.dropEffect = 'move';
-    }
-
     const column = e.currentTarget as HTMLElement;
     const dragging = document.querySelector('.dragging') as HTMLElement | null;
     
@@ -48,9 +29,7 @@ export function handleDragOver(e: DragEvent) {
 }
 
 export function getNewPosition(column: HTMLElement, posY: number): HTMLElement | null {
-    const elements = Array.prototype.slice.call(column
-                                                .querySelectorAll
-                                                ('.task:not(.dragging)')) as HTMLElement[];
+    const elements = column.querySelectorAll('.task:not(.dragging)');
 
     for (const element of elements) {
         const box = element.getBoundingClientRect();
@@ -63,43 +42,12 @@ export function getNewPosition(column: HTMLElement, posY: number): HTMLElement |
     return null;
 }
 
-export function handleDragEnter(e: DragEvent) {
-    const target = e.currentTarget as HTMLElement;
-    target.classList.add('over');
-}
-
-export function handleDragLeave(e: DragEvent) {
-    const target = e.currentTarget as HTMLElement;
-    target.classList.remove('over');
-}
-
-export function handleDrop(e: DragEvent) {
-    e.preventDefault();
-
-    const data = e.dataTransfer?.getData('text/plain');
-    let draggedElement;
-
-    if (data) {
-        draggedElement = document.getElementById(data); 
-    }
-
-    const targetColumn = e.currentTarget as HTMLElement;
-
-    targetColumn.classList.remove('over');
-}
-
 export function setupTaskDragAndDrop(task: Task) {
     if (task._id) {
         const taskElement = document.getElementById(task._id);
 
         if (!taskElement) {
-            return
-        }
-
-        const parentColumn = taskElement.closest('.column') as HTMLElement;
-
-        if (parentColumn) {
-            taskElement.setAttribute('data-column-id', parentColumn.id);
+            return null;
         }
 
         taskElement.addEventListener('dragstart', (e => 
@@ -118,12 +66,6 @@ export function removeTaskDragAndDrop(task: Task) {
             return
         }
 
-        const parentColumn = taskElement.closest('.column') as HTMLElement;
-
-        if (parentColumn) {
-            taskElement.setAttribute('data-column-id', parentColumn.id);
-        }
-
         const clone = taskElement.cloneNode(true) as HTMLElement;
         taskElement.replaceWith(clone);
     }
@@ -135,21 +77,12 @@ export function removeTaskDragAndDrop(task: Task) {
 */
 export async function handleDragStart(e: DragEvent, task: Task) {
     const target = e.currentTarget as HTMLElement;
-    console.log('(handleDragStart)');
-
-    if (e.dataTransfer) {
-        e.dataTransfer.effectAllowed = 'move';
-        if (task._id) {
-            e.dataTransfer.setData('taskId', task._id); 
-        }
-    }
     
     const targetColumn = e.currentTarget as HTMLElement;
     const columnElement = targetColumn.closest('.column') as HTMLElement;
 
     if (task._id) {
         sourceColumnId = columnElement.id; 
-        //console.log('sourceColumnId: ', sourceColumnId);
         deleteTask(sourceColumnId, task._id);
     }
 
@@ -173,11 +106,11 @@ export async function handleDragEnd(e: DragEvent, task: Task) {
 
         if (columnElement && sourceColumnId) {
             const targetColumnId = columnElement.id;
-            const columnIndex = columns.findIndex(column => column._id === columnElement.id);
+            const columnIndex = columns.findIndex(column => column._id === targetColumnId);
 
             if (task._id) {
                 const allTasks = columnElement.querySelectorAll('.task');
-                let newIndex = Array.from(allTasks).indexOf(dragging);
+                const newIndex = Array.from(allTasks).indexOf(dragging);
 
                 if (newIndex !== -1) {
                     const targetTasks = columns[columnIndex].tasks;

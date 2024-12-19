@@ -4,7 +4,6 @@ const url = 'http://localhost:3000';
 
 export async function getTasks(columnId: string) {
     const getTaskUrl = url.concat(`/api/columns/${columnId}/tasks`);
-
     try {
         const response = await fetch(getTaskUrl);
         if (!response.ok) {
@@ -67,7 +66,6 @@ export async function patchTaskTitle(columnId: string, taskId: string, title: st
             if (!response.ok) {
                 throw new Error(`Failed to update task title. Server responded with ${response.status}`);
             }
-    
         } catch (error: unknown) {
             if (error instanceof Error) {
                 console.error(error);
@@ -89,9 +87,6 @@ export async function patchTaskDescription(columnId: string, taskId: string, des
             if (!response.ok) {
                 throw new Error(`Failed to update task description. Server responded with ${response.status}`);
             }
-    
-            //const updateTaskTitle = await response.json();
-            //console.log('Updated task description: ', updateTaskTitle);
         } catch (error: unknown) {
             if (error instanceof Error) {
                 console.error(error);
@@ -101,7 +96,6 @@ export async function patchTaskDescription(columnId: string, taskId: string, des
 
 export async function deleteTask(columnId: string, taskId: string) {
     const deleteTaskUrl = url.concat(`/api/columns/${columnId}/tasks/${taskId}`)
-
     try {
         const response = await fetch(deleteTaskUrl, {
             method: 'DELETE',
@@ -113,8 +107,6 @@ export async function deleteTask(columnId: string, taskId: string) {
         if (!response.ok) {
             throw new Error(`Error deleting the task: ${response.status}`);
         }
-
-        //console.log('Task deleted succesfully!');
     } catch (error: unknown) {
         if (error instanceof Error) {
             console.log(error);
@@ -124,7 +116,6 @@ export async function deleteTask(columnId: string, taskId: string) {
 
 export async function updateTaskOrder(columnId: string, tasks: Task[]) {
     const updateTaskOrderUrl = url.concat(`/api/columns/${columnId}/reorder`);
-
     try {
         const response = await fetch(updateTaskOrderUrl, {
             method: 'PATCH',
@@ -146,7 +137,6 @@ export async function updateTaskOrder(columnId: string, tasks: Task[]) {
 
 export async function moveTask(sourceColumnId: string, targetColumnId: string, taskId: string) {
     const moveTaskUrl = url.concat('/api/columns/moveTask');
-
     try {
         const response = await fetch(moveTaskUrl, {
             method: 'PATCH',
@@ -158,8 +148,6 @@ export async function moveTask(sourceColumnId: string, targetColumnId: string, t
         if (!response.ok) {
             throw new Error(`Error moving task: ${response.statusText}`);
         }
-    
-        //console.log('Task order updated successfully'); 
     } catch (error) {
         console.error('Error moving task:', error);
     }

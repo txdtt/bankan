@@ -63,19 +63,8 @@ export function renderColumn(column: Column) {
                     columnTitle.textContent = inputTitle.value;
                     columnDialog.style.display = 'none';
 
-                    const columnIndex = columns.findIndex(col => col._id === column._id);
-
                     if (column._id) {
                         patchColumn(column._id, inputTitle.value);
-                    }
-
-
-                    if (columnIndex !== -1) {
-                        columns.splice(columnIndex, 1, {
-                            ...columns[columnIndex],
-                            title: inputTitle.value
-                        })
-
                     }
                 }
 
@@ -83,15 +72,6 @@ export function renderColumn(column: Column) {
                     if (e.key === 'Enter') {
                         columnTitle.textContent = inputTitle.value;
                         columnDialog.style.display = 'none';
-
-                        const columnIndex = columns.findIndex(col => col._id === column._id);
-                        if (columnIndex !== -1) {
-                            columns.splice(columnIndex, 1, {
-                                ...columns[columnIndex],
-                                title: inputTitle.value
-                            })
-
-                        }
                     }
                 })
             }
@@ -100,8 +80,6 @@ export function renderColumn(column: Column) {
             deleteColumnButton.innerHTML = 'Delete';
 
             deleteColumnButton.onclick = async () => {
-                const columnIndex = columns.findIndex(col => col._id === column._id);
-
                 if (column._id) {
                     await deleteColumn(column._id);
                     const columnToBeRemoved = document.getElementById(column._id);
@@ -110,7 +88,6 @@ export function renderColumn(column: Column) {
                     }
                 }
             }
-
 
             columnDialog.appendChild(editColumnTitle);
             columnDialog.appendChild(deleteColumnButton);
@@ -132,10 +109,9 @@ export function renderColumn(column: Column) {
 
     columnElement.appendChild(columnTitleContainer);
 
-    if (column.tasks && Array.isArray(column.tasks)) {
+    if (column.tasks) {
         column.tasks.forEach(task => {
             const taskElement = createTaskElement(task);
-
             columnElement.appendChild(taskElement);
         })
     }

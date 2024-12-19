@@ -14,7 +14,7 @@ declare global {
 window.onload = async () => {
     await loadColumns();
     setupColumnsDragAndDrop();
-    if (columns && Array.isArray(columns) ) {
+    if (columns) {
         columns.forEach(column => {
             renderColumn(column);
             column.tasks.forEach(task => setupTaskDragAndDrop(task));
@@ -44,7 +44,7 @@ export function addColumn() {
     titleHeader.textContent = 'Add New Column';
 
     const titleLabel = document.createElement('label');
-    titleLabel.setAttribute('for', 'columnTitle');
+    titleLabel.setAttribute('for', 'titleInput');
     titleLabel.textContent = 'Title:';
 
     const titleInput = document.createElement('input');
@@ -112,7 +112,7 @@ export async function addTask() {
     const columnSelect = document.createElement('select');
     columnSelect.id = 'columnSelect';
 
-    if (columns && Array.isArray(columns)) {
+    if (columns) {
         columns.forEach(column => {
             const option = document.createElement('option');
             if (column._id) {

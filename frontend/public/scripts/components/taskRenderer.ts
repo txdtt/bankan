@@ -1,7 +1,7 @@
 import { Task } from '../models/taskModel';
 import { columns } from '../models/columnModel';
 import { setupTaskDragAndDrop, removeTaskDragAndDrop } from '../utils/dragAndDrop';
-import { patchTaskTitle, patchTaskDescription, deleteTask, addTaskToColumn, getTasks } from '../services/taskService';
+import { patchTaskTitle, patchTaskDescription, deleteTask, addTaskToColumn } from '../services/taskService';
 import { loadColumns } from '../services/columnService';
 import { setupColumnsDragAndDrop } from '../utils/dragAndDrop';
 
@@ -37,14 +37,16 @@ export function createTaskElement(task: Task): HTMLElement {
     taskElement.appendChild(taskDescription);
 
     setupTaskDragAndDrop(task);
+
+    // ???
     setupMenuDialog(taskDots, taskTitle, taskDescription, taskElement);
+    // ???
 
     return taskElement;
 }
 
 export function setupMenuDialog(taskDots: HTMLElement, taskTitle: HTMLElement, taskDescription: HTMLElement, taskElement: HTMLElement) {
     taskDots.onclick = () => {
-
         let taskDialog = taskDots.querySelector('.menuDialog') as HTMLElement;
 
         if (taskDialog) {
@@ -81,13 +83,6 @@ export function setupMenuDialog(taskDots: HTMLElement, taskTitle: HTMLElement, t
                             const taskId = taskElement.id;
                             if (taskId) {
                                 await patchTaskTitle(columnElement.id, taskId, inputTitle.value);
-
-                                const taskIndex = columns[columnIndex].tasks.findIndex(
-                                    task => task._id === taskId);
-
-                                removeTaskDragAndDrop(columns[columnIndex].tasks[taskIndex]);
-
-                                setupTaskDragAndDrop(columns[columnIndex].tasks[taskIndex]);
                             }
                         }
                     }
@@ -130,13 +125,7 @@ export function setupMenuDialog(taskDots: HTMLElement, taskTitle: HTMLElement, t
                         if (columnIndex !== -1) {
                             const taskId = taskElement.id;
                             if (taskId) {
-                                const taskIndex = columns[columnIndex].tasks.findIndex(
-                                    task => task._id === taskId);
-
-                                removeTaskDragAndDrop(columns[columnIndex].tasks[taskIndex]);
-
-                                setupTaskDragAndDrop(columns[columnIndex].tasks[taskIndex]);
-
+                                patchTaskDescription(columnId, taskId, inputTitle.value);
                             }
                         }
                     }
@@ -213,7 +202,10 @@ export async function submitTask(columnSelected: string, title: string, descript
             return null;
         }
 
+        // ???
         const taskElement = createTaskElement(taskToCreate);
+        // ??? 
+
         columnElement.appendChild(taskElement);
 
         setupColumnsDragAndDrop();

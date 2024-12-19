@@ -4,7 +4,6 @@ const url = 'http://localhost:3000';
 
 export async function getColumns(): Promise<any[]> {
     const getColumnUrl = url.concat('/api/columns');
-
     try {
         const response = await fetch(getColumnUrl);
         if (!response.ok) {
@@ -22,7 +21,6 @@ export async function getColumns(): Promise<any[]> {
 
 export async function postColumn(newColumn: Column) {
     const postColumnUrl = url.concat('/api/columns');
-
     try {
         const response = await fetch(postColumnUrl, {
             method: 'POST',
@@ -35,9 +33,6 @@ export async function postColumn(newColumn: Column) {
         if (!response.ok) {
             throw new Error(`Server error: ${response.status}`);
         }
-
-        //const result = await response.json();
-        //console.log('Column created: ', result);
     } catch (error: unknown) {
         if (error instanceof Error) {
             console.error('Error posting column: ', error.message);
@@ -59,9 +54,6 @@ export async function patchColumn(columnId: string, title: string) {
         if (!response.ok) {
             throw new Error(`Failed to add column. Server responded with ${response.status}`);
         }
-
-        //const updateColumn = await response.json();
-        //console.log('Updated column: ', updateColumn);
     } catch (error: unknown) {
         if (error instanceof Error) {
             console.error(error);
@@ -71,7 +63,6 @@ export async function patchColumn(columnId: string, title: string) {
 
 export async function deleteColumn(columnId: string) {
     const deleteColumnUrl = url.concat(`/api/columns/${columnId}`);
-
     try {
         const response = await fetch(deleteColumnUrl, {
             method: 'DELETE',
