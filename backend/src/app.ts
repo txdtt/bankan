@@ -3,6 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import columnRouter  from './routes/columnRoutes.js'
 import { connectDatabase } from './config/database.js'
+import taskRouter from './routes/taskRoutes.js';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
@@ -18,7 +19,7 @@ app.use(express.static(path.join(__dirname, '..')));
 
 connectDatabase();
 
-app.use('/api/columns', columnRouter);
+app.use('/api/columns', columnRouter, taskRouter);
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
