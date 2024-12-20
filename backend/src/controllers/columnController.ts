@@ -8,9 +8,7 @@ export const getColumns = async (_: Request, res: Response) => {
     } catch (error) {
         if (error instanceof Error) {
             res.status(500).json({ error: 'Error fetching columns', details: error.message });
-        } else {
-            res.status(500).json({ error: 'Error fetching columns', details: 'Unknown error' });
-        }
+        } 
     }
 }
 
@@ -22,9 +20,7 @@ export const addColumn = async (req: Request, res: Response) => {
     } catch (error: unknown){
         if (error instanceof Error) {
             res.status(500).json({ error: 'Failed to create column', details: error.message });
-        } else {
-            res.status(500).json({ error: 'Failed to create column', details: 'Unknown error' });
-        }
+        } 
     }
 }
 
@@ -40,9 +36,7 @@ export const deleteColumns = async(_: Request, res: Response) => {
     } catch (error: unknown) {
         if (error instanceof Error) {
             res.status(500).json({ error: 'Error deleting all columns', details: error.message });
-        }  else {
-            res.status(500).json({ error: 'Error deleting all columns', details: 'Unknown error' });
-        }
+        }  
     }
 }
 
@@ -61,7 +55,6 @@ export const getColumnById = async (req: Request, res: Response) => {
             }
             return res.status(500).json({ error: 'Error fetching column', details: error.message });
         }
-        return res.status(500).json({ error: 'Unknown error' });
     }
 }
 
@@ -76,12 +69,10 @@ export const updateColumn = async (req: Request, res: Response) => {
         }
 
         res.send(column);
-    } catch (error) {
+    } catch (error: unknown) {
         if (error instanceof Error) {
             res.status(500).json({ error: 'Error updating column', details: error.message });
-        } else {
-            res.status(500).json({ error: 'Error updating column', details: 'Unknown error' });
-        }
+        } 
     }
 }
 
@@ -95,9 +86,7 @@ export const deleteColumnById = async (req: Request, res: Response) => {
     } catch (error: unknown) {
         if (error instanceof Error) {
             res.status(500).json({ error: 'Error deleting column', details: error.message });
-        } else {
-            res.status(500).json({ error: 'Error deleting column', details: 'Unknown error' });
-        }
+        } 
     }
 }
 
@@ -112,9 +101,7 @@ export const updateColumnTitle = async (req: Request, res: Response) => {
     } catch (error) {
         if (error instanceof Error) {
             return res.status(500).json({ error: 'Error patching column', details: error.message });
-        } else {
-            return res.status(500).json({ error: 'Error patching column', details: 'Unknown error' });
-        }
+        } 
     }
 }
 
@@ -135,8 +122,9 @@ export const reorderTasks = async (req: Request, res: Response) => {
         console.log('Updated tasks: ', tasks);
 
         res.json(updatedColumn);
-    } catch (error: unknown) {
-        console.error(error); 
-        res.status(500).json({ message: 'Error updating task order!' });
+    } catch (error) {
+        if (error instanceof Error) {
+            return res.status(500).json({ error: 'Error updating task order!', details: error.message });
+        } 
     }
 }

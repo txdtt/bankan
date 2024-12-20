@@ -18,11 +18,8 @@ export const moveTask = async(req: Request, res: Response) => {
         res.status(200).json({ message: result.message });
     } catch (error: unknown) {
         if (error instanceof Error) {
-            console.error('Error moving task:', error);
-            res.status(500).json({ message: 'Server error', details: error.message });
-        } else {
-            res.status(500).json({ message: 'Unknown server error' });
-        }
+            res.status(500).json({ message: 'Error moving task: ', details: error.message });
+        } 
     }
 }
 
@@ -37,10 +34,8 @@ export const editTaskTitle = async (req: Request, res: Response) => {
         res.status(200).json(column);
     } catch (error) {
         if (error instanceof Error) {
-            return res.status(500).json({ error: 'Error patching task title', details: error.message });
-        } else {
-            return res.status(500).json({ error: 'Error patching title', details: 'Unknown error' });
-        }
+            return res.status(500).json({ message: 'Error patching task title', details: error.message });
+        } 
     }
 }
 
@@ -53,10 +48,8 @@ export const getTasksInColumn = async (req: Request, res: Response) => {
         return res.status(200).json({ success: true, tasks: column.tasks });
     } catch (error: unknown) {
         if (error instanceof Error) {
-            return res.status(500).json({ error: 'Error fetching column', details: error.message });
-        } else {
-            return res.status(500).json({ error: 'Error fetching column', details: 'Unknown error' });
-        }
+            return res.status(500).json({ message: 'Error fetching column', details: error.message });
+        } 
     }
 }
 
@@ -68,7 +61,7 @@ export const addTaskToColumn = async (req: Request, res: Response) => {
         const addedTask = await taskService.addTaskToColumn(columnId, newTask);
 
         if (!addedTask.success) {
-            return res.status(404).json({ message: addedTask.message });
+            return res.status(404).json({ message: addedTask.message});
         }
 
         return res.status(200).json({
@@ -78,8 +71,7 @@ export const addTaskToColumn = async (req: Request, res: Response) => {
 
     } catch (error: unknown) {
         if (error instanceof Error) {
-            console.error('Error in addTaskToColumn controller:', error);
-            return res.status(500).json({ message: 'Internal Server Error' });
+            return res.status(500).json({ message: 'Error adding task to column', details: error.message });
         }
     }
 }
@@ -91,9 +83,10 @@ export const deleteTaskInColumn = async (req: Request, res: Response) => {
 
         await taskService.deleteTaskInColumn(columnId, taskId);
 
-        res.status(200).json({ message: 'Task deleted successfully! '});
+        res.status(200).json({ message: 'Task deleted successfully!'});
     } catch (error: unknown) {
-        console.error(error);
-        res.status(500).json({ message: 'Internal server error' });
+        if (error instanceof Error) {
+            res.status(500).json({ message: 'Internal server error', details: error.message });
+        }
     }
 }
