@@ -22,9 +22,9 @@ export const moveTask = async (
         return { success: false, message: 'Source column not found!'};
     }
 
-    const task = sourceColumn.tasks.find((t) => t._id.toString() === taskId);
+    const taskToBeMoved = sourceColumn.tasks.find((task) => task._id.toString() === taskId);
 
-    if (!task) {
+    if (!taskToBeMoved) {
         return { success: false, message: 'Task not found in source column!' };
     }
 
@@ -32,7 +32,7 @@ export const moveTask = async (
 
     const targetColumn = await ColumnModel.findByIdAndUpdate(
         targetColumnObjectId,
-        { $push: { tasks: task } },
+        { $push: { tasks: taskToBeMoved } },
         { new: true }
     );
 
@@ -57,21 +57,21 @@ export const editTaskTitle = async (
         return { success: false, message: 'Column not found!'};
     }
 
-    const task = column.tasks.find((task: Task) => task._id?.toString() === taskId);
+    const taskToBeUpdated = column.tasks.find((task: Task) => task._id?.toString() === taskId);
 
-    if (!task) {
+    if (!taskToBeUpdated) {
         return { success: false, message: 'Task not found!'};
     }
 
     if (title) {
-        task.title = title;
+        taskToBeUpdated.title = title;
     }
 
     if (description) {
-        task.description = description;
+        taskToBeUpdated.description = description;
     }
 
-    await task.save();
+    await taskToBeUpdated.save();
 
     return { success: true, message: 'Task titled changed successfully!'};
 }

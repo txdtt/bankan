@@ -37,8 +37,8 @@ export const deleteColumnById = async (columnId: string) => {
     return ColumnModel.findByIdAndDelete(columnId);
 }
 
-export const updateColumnTitle = async (columnId: string, title: string): 
-    Promise<{ success: boolean, message: string }> => {
+export const updateColumnTitle = async (columnId: string, title: string
+): Promise<{ success: boolean, message: string }> => {
 
     const column = await ColumnModel.findById(columnId);
 
@@ -57,9 +57,9 @@ export const reorderTasks = async (columnId: string, tasks: Task[]):
     Promise<{ success: boolean, message: string }> => {
 
     const updatedColumn = await ColumnModel.findByIdAndUpdate(
-            columnId,
-            { tasks: tasks },
-            { new: true }
+        columnId,
+        { tasks: tasks },
+        { new: true }
     );
 
     if (!updatedColumn) {
