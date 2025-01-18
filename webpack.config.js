@@ -9,7 +9,7 @@ export default {
     devtool: 'source-map',
 
     entry: {
-        main: './frontend/public/scripts/main.ts',
+        main: './client/public/scripts/main.ts',
     },
     output: {
         path: path.resolve(__dirname, 'dist/'), // Base dist directory
@@ -32,14 +32,16 @@ export default {
     plugins: [
         new CleanWebpackPlugin(),
         new HtmlWebpackPlugin({
-            template: './frontend/public/index.html',
-            filename: 'public/index.html', // Keeps index.html inside dist/public/
-            inject: true, // Automatically injects scripts
+            template: './client/public/index.html',
+            filename: 'public/index.html', 
+            inject: true,
         }),
         new CopyWebpackPlugin({
             patterns: [
-                { from: './frontend/public/favicon.ico', to: 'public/favicon.ico' },
-                { from: './frontend/public/styles.css', to: 'public/styles.css' },
+                { from: './client/public/favicon.ico', to: 'public/favicon.ico' },
+                { from: './client/public/styles.css',  to: 'public/styles.css' },
+                { from: './client/public/signup.html', to: 'public/signup.html' },
+                { from: './client/public/board.html',  to: 'public/board.html' },
             ],
         }),
     ],

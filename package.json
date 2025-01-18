@@ -6,7 +6,7 @@
   "scripts": {
     "build": "webpack && npm run build-backend",
     "build-frontend": "webpack",
-    "build-backend": "tsc --project ./backend/tsconfig.json",
+    "build-backend": "tsc --project ./server/tsconfig.json",
     "start": "nodemon ./dist/src/app.js"
   },
   "keywords": [],
