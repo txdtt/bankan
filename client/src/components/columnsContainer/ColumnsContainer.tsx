@@ -17,23 +17,26 @@ const ColumnsContainer = ({ socket }: ColumnsContainerProps) => {
     const [isAddingColumn, setIsAddingColumn] = useState(false);
 
     const emitColumnsState = (newColumns: ColumnModel[]) => {
+        //console.log('newColumns: ', newColumns);
         socket.emit('updateColumns', newColumns);
     }
 
     useEffect(() => {
         socket.on('columnsUpdated', (updatedColumns) => {
-            setColumns(updatedColumns);
+            //console.log('newColumns: ', updatedColumns);
+            setColumns([...updatedColumns]);
         });
 
         return () => {
             socket.off('columnsUpdated');
         }
-    })
+    }, [socket]);
 
     const addColumn = (columnTitle: string) => {
         if (columnTitle.trim() === "") {
             return;
         }
+
         const newColumn: ColumnModel = {
             _id: uuidv4(),
             title: columnTitle,
@@ -116,6 +119,17 @@ const ColumnsContainer = ({ socket }: ColumnsContainerProps) => {
         emitColumnsState(updatedColumns);
     };
 
+    const editColumnTitle = (columnId: string, updatedColumn: ColumnModel) => {
+        //console.log("Updated Column: ", updatedColumn);
+
+        const updatedColumns = columns.map((col) => 
+            col._id === columnId ? updatedColumn : col
+        );
+
+        setColumns(updatedColumns);
+        emitColumnsState(updatedColumns);
+    }
+
     const deleteColumn = (columnId: string) => {
         const updatedColumns = columns.filter((col) => col._id !== columnId)
         
@@ -153,8 +167,8 @@ const ColumnsContainer = ({ socket }: ColumnsContainerProps) => {
             <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                 <div className={styles.columnsContainer}>
                     {columns.map((column) => (
-                        <Column key={column._id} column={column} moveTaskNewColumn={moveTaskNewColumn}
-                        editTask={editTask} deleteColumn={deleteColumn} deleteTask={deleteTask}/>
+                        <Column key={`${column._id}-${column.title}`} column={column} moveTaskNewColumn={moveTaskNewColumn}
+                        editTask={editTask} editColumnTitle={editColumnTitle} deleteColumn={deleteColumn} deleteTask={deleteTask}/>
                     ))}
                 </div>
             </DndContext>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import styles from './Column.module.css';
 import Task from '../task/Task';
 
@@ -15,12 +15,12 @@ const Column: React.FC<{
     column: ColumnModel, 
     moveTaskNewColumn: (columnId: string, newTask: TaskModel) => void,
     editTask: (columnId: string, taskId: string, updatedTask: TaskModel) => void,
+    editColumnTitle: (columnId: string, updatedColumn: ColumnModel) => void,
     deleteColumn: (columnId: string) => void,
     deleteTask: (columnId: string, taskId: string) => void
-}> = ({ column, moveTaskNewColumn, editTask, deleteTask, deleteColumn }) => {
+}> = ({ column, moveTaskNewColumn, editTask, editColumnTitle, deleteTask, deleteColumn }) => {
 
     const [columnTitle, setColumnTitle] = useState(column.title);
-    const [isEditingTitle, setIsEditingTitle] = useState(false)
     const [isAddingTask, setIsAddingTask] = useState(false)
     const [newTaskTitle, setNewTaskTitle] = useState("");
     const [newTaskDesc, setNewTaskDesc] = useState("");
@@ -28,6 +28,10 @@ const Column: React.FC<{
     const { setNodeRef } = useDroppable({
         id: column._id,
     });
+
+    useEffect(() => {
+        console.log("Column updated:", column);
+    }, [column]);
 
     const addTask = () => {
         const newTask: TaskModel = {
@@ -41,10 +45,26 @@ const Column: React.FC<{
         setIsAddingTask(false);
     }
 
-    const editColumnTitle = (newColumnTitle: string) => {
-        setColumnTitle(newColumnTitle);
-        setIsEditingTitle(false);
-    }
+    const [isEditingTitle, setIsEditingTitle] = useState(false)
+
+    const handleEditColumn = (editingColumn: ColumnModel, newTitle: string) => {
+        if (editingColumn) {
+            // console.log("editingColumn before: ", editingColumn);
+    
+            const updatedColumn: ColumnModel = {
+                ...editingColumn,
+                title: newTitle || editingColumn.title, 
+                tasks: [...editingColumn.tasks] 
+            };
+    
+            setColumnTitle(newTitle);
+            editColumnTitle(editingColumn._id, updatedColumn); 
+            setIsEditingTitle(false);
+    
+            // console.log("updatedColumn: ", updatedColumn);
+        }
+    };
+
 
     const [isEditing, setIsEditing] = useState(false);
     const [editingTask, setEditingTask] = useState<TaskModel | null>(null);
@@ -84,7 +104,7 @@ const Column: React.FC<{
                     <input 
                         type="text"
                         placeholder={columnTitle}
-                        onBlur={(e) => editColumnTitle(e.target.value)}
+                        onBlur={(e) => handleEditColumn(column, e.target.value)}
                         autoFocus
                     />
                 </div>
