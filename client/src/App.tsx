@@ -1,11 +1,10 @@
 import './App.css'
-import ColumnsContainer from './components/columnsContainer/ColumnsContainer'
+import Board from './pages/board/Board'
 
 function App() {
-
   return (
     <>
-        <ColumnsContainer />
+        <Board />
     </>
   )
 }

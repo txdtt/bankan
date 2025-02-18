@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Column from '../column/Column';
 import styles from './ColumnsContainer.module.css'
 import { closestCenter, DndContext, DragEndEvent } from '@dnd-kit/core';
@@ -6,10 +6,29 @@ import ColumnModel from '../../models/columnModel';
 
 import { v4 as uuidv4 } from 'uuid';
 import TaskModel from '../../models/taskModel';
+import { Socket } from 'socket.io-client';
 
-const ColumnsContainer = () => {
+type ColumnsContainerProps = {
+    socket: Socket;
+}
+
+const ColumnsContainer = ({ socket }: ColumnsContainerProps) => {
     const [columns, setColumns] = useState<ColumnModel[]>([]);
     const [isAddingColumn, setIsAddingColumn] = useState(false);
+
+    const emitColumnsState = (newColumns: ColumnModel[]) => {
+        socket.emit('updateColumns', newColumns);
+    }
+
+    useEffect(() => {
+        socket.on('columnsUpdated', (updatedColumns) => {
+            setColumns(updatedColumns);
+        });
+
+        return () => {
+            socket.off('columnsUpdated');
+        }
+    })
 
     const addColumn = (columnTitle: string) => {
         if (columnTitle.trim() === "") {
@@ -20,7 +39,10 @@ const ColumnsContainer = () => {
             title: columnTitle,
             tasks: [],
         };
-        setColumns([...columns, newColumn]);
+
+        const newColumns = [...columns, newColumn];
+        setColumns(newColumns);
+        emitColumnsState(newColumns)
         setIsAddingColumn(false);
     }
 
@@ -33,89 +55,86 @@ const ColumnsContainer = () => {
         const [fromColumnId, taskId] = (active.id as string).split(":");
         const [toColumnId, targetTaskId]= (over.id as string).split(":");
 
+        let updatedColumns = [...columns];
+
         if (fromColumnId !== toColumnId) {
-            setColumns((prevColumns) => {
-                const fromColumnIndex = prevColumns.findIndex((col) => col._id === fromColumnId);
-                const toColumnIndex = prevColumns.findIndex((col) => col._id === toColumnId);
+            const fromColumnIndex = updatedColumns.findIndex((col) => col._id === fromColumnId);
+            const toColumnIndex = updatedColumns.findIndex((col) => col._id === toColumnId);
 
-                const fromTasks = [...prevColumns[fromColumnIndex].tasks];
-                const fromTaskIndex = fromTasks.findIndex((task) => task._id === taskId);
+            const fromTasks = [...updatedColumns[fromColumnIndex].tasks];
+            const fromTaskIndex = fromTasks.findIndex((task) => task._id === taskId);
 
-                const toTasks = [...prevColumns[toColumnIndex].tasks];
-                const toTaskIndex = toTasks.findIndex((task) => task._id === targetTaskId);
-                
-                const [movedTask] = fromTasks.splice(fromTaskIndex, 1);
-                toTasks.splice(toTaskIndex, 0, movedTask);
+            const toTasks = [...updatedColumns[toColumnIndex].tasks];
+            const toTaskIndex = toTasks.findIndex((task) => task._id === targetTaskId);
+            
+            const [movedTask] = fromTasks.splice(fromTaskIndex, 1);
+            toTasks.splice(toTaskIndex, 0, movedTask);
 
-                const updatedColumns = [...prevColumns];
-                updatedColumns[fromColumnIndex].tasks = fromTasks;
-                updatedColumns[toColumnIndex].tasks = toTasks;
-
-                return updatedColumns;
-            })
+            updatedColumns[fromColumnIndex].tasks = fromTasks;
+            updatedColumns[toColumnIndex].tasks = toTasks;
         } else {
-            setColumns((prevColumns) => {
-                const columnIndex = prevColumns.findIndex((col) => col._id === fromColumnId);
-                const tasks = [...prevColumns[columnIndex].tasks];
+            const columnIndex = updatedColumns.findIndex((col) => col._id === fromColumnId);
+            const tasks = [...updatedColumns[columnIndex].tasks];
 
-                const fromTaskIndex = tasks.findIndex((task) => task._id === taskId);
-                const toTaskIndex = tasks.findIndex((task) => task._id === targetTaskId) ;
+            const fromTaskIndex = tasks.findIndex((task) => task._id === taskId);
+            const toTaskIndex = tasks.findIndex((task) => task._id === targetTaskId);
 
-                const [movedTask] = tasks.splice(fromTaskIndex, 1);
-                tasks.splice(toTaskIndex, 0, movedTask);
+            const [movedTask] = tasks.splice(fromTaskIndex, 1);
+            tasks.splice(toTaskIndex, 0, movedTask);
 
-                const updatedColumns = [...prevColumns];
-                updatedColumns[columnIndex].tasks = tasks;
-
-                return updatedColumns;
-            })
+            updatedColumns[columnIndex].tasks = tasks;
         }
+
+        setColumns(updatedColumns);
+        emitColumnsState(updatedColumns); 
     };
 
     const moveTaskNewColumn = (columnId: string, newTask: TaskModel) => {
-        setColumns((prevColumns) =>
-            prevColumns.map((col) => 
-                col._id === columnId 
-                    ? {...col, tasks: [...col.tasks, newTask]}
-                    : col
-            )
-        );
+        const updatedColumns = columns.map((col) => 
+            col._id === columnId 
+                ? {...col, tasks: [...col.tasks, newTask]}
+                : col
+        )
+
+        setColumns(updatedColumns);
+        emitColumnsState(updatedColumns);
     };
 
     const editTask = (columnId: string, taskId: string, updatedTask: TaskModel) => {
-        setColumns((prevColumns) =>
-            prevColumns.map((col) =>
-                col._id === columnId
-                    ? {
-                        ...col,
-                        tasks: col.tasks.map((task) =>
-                            task._id === taskId ? updatedTask : task
-                        ),
-                    }
-                    : col
-            )
-        );
+        const updatedColumns = columns.map((col) =>
+            col._id === columnId
+            ? {
+                ...col,
+                tasks: col.tasks.map((task) =>
+                    task._id === taskId ? updatedTask : task
+                ),
+            }
+            : col
+        )
+
+        setColumns(updatedColumns);
+        emitColumnsState(updatedColumns);
     };
 
     const deleteColumn = (columnId: string) => {
-        setColumns((prevColumns) =>
-            prevColumns.filter((col) => col._id !== columnId)
-        );
+        const updatedColumns = columns.filter((col) => col._id !== columnId)
+        
+        setColumns(updatedColumns);
+        emitColumnsState(updatedColumns);
     };
 
     const deleteTask = (columnId: string, taskId: string) => {
-        console.log("columnId: ", columnId);
-        console.log("taskId: ", taskId);
-        setColumns((prevColumns) =>
-            prevColumns.map((col) => 
-                col._id === columnId
-                ? {
-                    ...col,
-                    tasks: col.tasks.filter((task) => task._id !== taskId),
-                }  
-                : col       
-            )
+        const updatedColumns = columns.map((col) => 
+            col._id === columnId
+            ? {
+                ...col,
+                tasks: col.tasks.filter((task) => task._id !== taskId),
+            }  
+            : col       
         )
+
+        setColumns(updatedColumns);
+        emitColumnsState(updatedColumns);
     }
 
     return (

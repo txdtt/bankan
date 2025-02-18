@@ -1,3 +1,4 @@
+/*
 import { ColumnModel } from '../models/columnModel';
 
 const url = 'http://localhost:3000';
@@ -86,3 +87,4 @@ export async function loadColumns() {
     columns.length = 0;
     columns.push(...fetchedColumns);
 }
+*/

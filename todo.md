@@ -1,6 +1,0 @@
-- Cada Column terá um "Id" que deverá ser mapeado para um "ObjectId"
-- Cada Task terá um "Id" que deverá ser mapeado para um "ObjectId"
-- Talvez cada ColumnsContainer também deva ter um Id
-- O ColumnsContainer conhece o estado das Columns
-- Uma Column conhece o estado das Tasks
-- Estabelecer conexão WebSocket (ws) para a Board
