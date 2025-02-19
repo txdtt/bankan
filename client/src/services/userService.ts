@@ -1,4 +1,5 @@
 import UserModel from "../models/userModel";
+//import BoardModel from "../models/boardModel";
 
 const url = 'http://localhost:3000/api/user';
 
@@ -44,6 +45,36 @@ export async function authenticateUser(email: string, password: string): Promise
     } catch (error: unknown) {
         if (error instanceof Error) {
             console.error("Error authenticating user:", error.message);
+        }
+        return { success: false, message: "An error occurred" }; 
+    }
+}
+
+export interface UserProfile {
+    success: boolean;
+    message?: string;
+    user?: UserModel;
+}
+
+export async function fetchUserProfile(token: string): Promise<UserProfile> {
+    try {
+        const response = await fetch(`${url}/profile`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+        }) 
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch user profile');
+        }
+
+        const data = await response.json();
+
+        return { success: true, ...data };
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error("Error authenticating token:", error.message);
         }
         return { success: false, message: "An error occurred" }; 
     }

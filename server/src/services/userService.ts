@@ -37,3 +37,17 @@ export const authenticateUser = async (email: string, password: string) => {
         token
     }
 }
+
+export const getUserProfile = async (userId: string) => {
+    try {
+        const user = await UserModel.findById(userId).select('-password');
+
+        if (!user) {
+            return { success: false, message: 'User not found.'};
+        }
+
+        return { success: true, user };
+    } catch (error) {
+        return { success: false, message: 'Error fetching user' };
+    }
+};
