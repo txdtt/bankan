@@ -4,6 +4,7 @@ export type UserModel = {
     _id: string;
     name: string;
     surname: string;
+    username: string;
     email: string;
     password: string;
     boards: BoardModel[];

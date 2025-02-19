@@ -1,10 +1,13 @@
 import React, { useState } from "react";
 import { authenticateUser } from "../../services/userService";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
+
+    const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -16,8 +19,17 @@ const Login = () => {
             setError(response.message || "Login failed, please try again.");
         } else if (response.token){
             localStorage.setItem("token", response.token);
-            alert("Logged in!");
+
+            if (response.user) {
+                localStorage.setItem("username", response.user?.username);
+                const username = response.user.username;
+                console.log("username: ", username);
+                navigate(`/u/${username}`);
+            } else {
+                setError(response.message || "Login failed, please try again.");
+            }
         }
+
     }
 
     return (

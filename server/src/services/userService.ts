@@ -1,12 +1,30 @@
 import { UserModel } from '../models/userModel.js';
 import jwt from 'jsonwebtoken';
 
+const generateUniqueUsername = async (name: string, surname: string): Promise<string> => {
+    let baseUsername = `${name}${surname}`.toLowerCase().replace(/\s+g/, "");
+    let username = baseUsername;
+    let count = 1;
+
+    while (await UserModel.exists({ username })) {
+        username = `${baseUsername}${count}`;
+        count++;
+    }
+
+    return username;
+}
+
 export const createUser = async (name: string, surname: string, email: string, password: string) => {
     const userExists = await UserModel.findOne({ email: email.toLowerCase() });
+
     if (userExists) {
         return {success: false, message: 'User already exists!' };
     }
-    const newUser = new UserModel({ name, surname, email, password, boards: [] });
+    
+    const username = await generateUniqueUsername(name, surname);
+
+    const newUser = new UserModel({ name, surname, username, email, password, boards: [] });
+
     return await newUser.save();
 }
 
@@ -32,6 +50,7 @@ export const authenticateUser = async (email: string, password: string) => {
             _id: user._id,
             name: user.name,
             surname: user.surname,
+            username: user.username,
             email: user.email,
         },
         token

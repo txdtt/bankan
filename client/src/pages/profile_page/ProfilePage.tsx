@@ -1,11 +1,16 @@
 import { useEffect, useState } from 'react';
 import { fetchUserProfile } from '../../services/userService';
 import UserModel from '../../models/userModel';
+import { useNavigate, useParams } from 'react-router-dom';
 //import BoardModel from '../../models/boardModel';
 
 const ProfilePage = () => {
     const [user, setUser] = useState<UserModel | null>(null);
     const [error, setError] = useState<string>('');
+
+    const { username } = useParams();
+    const navigate = useNavigate();
+    const loggedInUser = localStorage.getItem('username');
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -33,6 +38,18 @@ const ProfilePage = () => {
         fetchProfile(token);
     }, [])
 
+    useEffect(() => {
+        if (username && loggedInUser && username !== loggedInUser) {
+            navigate(`/u/${loggedInUser}`);
+        }
+    }, [username, loggedInUser, navigate]);
+
+    const signOut = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('username');
+        navigate('/');
+    }
+
     return (
         <div>
             {error && <p style={{ color: 'red' }}>{error}</p>}
@@ -40,6 +57,7 @@ const ProfilePage = () => {
                 <div>
                     <h1>Olá, {user.name} {user.surname}</h1>
                     <p>Email: {user.email}</p>
+                    <button onClick={signOut}>Sair</button>
                 </div>
             ) : (
                 <p>Loading...</p>

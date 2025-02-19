@@ -1,6 +1,18 @@
-import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 const Home = () => {
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        const username = localStorage.getItem('username');
+
+        if (token && username) {
+            navigate(`/u/${username}`);
+        }
+    }, [navigate]);
+
     return (
         <div>
             <h1>Bankan</h1>

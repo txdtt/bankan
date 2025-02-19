@@ -24,6 +24,7 @@ const SignUp = () => {
             _id: "", 
             name,
             surname,
+            username: "",
             email,
             password,
             boards: [],
