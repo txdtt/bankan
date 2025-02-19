@@ -1,25 +1,36 @@
-import React from "react";
+import React, { useState } from "react";
+import { authenticateUser } from "../../services/userService";
 
 const Login = () => {
-    const handleSubmit = (e: React.FormEvent) => {
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log("Form submitted!");
+        setError("");
+
+        const response = await authenticateUser(email, password);
+
+        if (!response.success) {
+            setError(response.message || "Login failed, please try again.");
+        } else if (response.token){
+            localStorage.setItem("token", response.token);
+            alert("Logged in!");
+        }
     }
 
     return (
         <form onSubmit={handleSubmit}>
             <div>
-                <label>
-                    Email:
-                    <input type="email" name="email" required />
-                </label>
+                <label>Email:</label>
+                <input type="email" name="email" required value={email} onChange={(e) => setEmail(e.target.value)}/>
             </div>
             <div>
-                <label>
-                    Senha:
-                    <input type="password" name="password" required />
-                </label>
+                <label>Senha:</label>
+                <input type="password" name="password" required value={password} onChange={(e) => setPassword(e.target.value)}/>
             </div>
+            {error && <p style={{ color: "red" }}>{error}</p>}
             <button type="submit">Entrar</button>
         </form>
     )

@@ -5,7 +5,7 @@ export type Task = Document & {
     description: string;
 }
 
-const TaskSchema: Schema = new Schema({
+const TaskSchema: Schema = new Schema<Task>({
     title: { type: String, required: true },
     description: { type: String, required: true },
 });

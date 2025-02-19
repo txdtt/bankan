@@ -5,7 +5,7 @@ export type Column = Document & {
     tasks: mongoose.Types.ObjectId[];  
 };
 
-const ColumnSchema: Schema = new Schema({
+const ColumnSchema: Schema = new Schema<Column>({
     title: { type: String, required: true, unique: true },
     tasks: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Task' }],  
 });

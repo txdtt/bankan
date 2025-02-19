@@ -7,6 +7,9 @@ import { connectDatabase } from './config/database.js'
 import taskRouter from './routes/taskRoutes.js';
 import userRouter from './routes/userRoutes.js';
 import { Server } from 'socket.io';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
