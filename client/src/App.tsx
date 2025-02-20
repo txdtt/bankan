@@ -4,6 +4,7 @@ import Home from './pages/home/Home'
 import Login from './pages/login/Login'
 import SignUp from './pages/sign_up/SignUp'
 import ProfilePage from './pages/profile_page/ProfilePage'
+import Board from './pages/board/Board'
 
 function App() {
     return (
@@ -13,6 +14,7 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<SignUp />} />
                 <Route path="/u/:username" element={<ProfilePage />} />
+                <Route path="/b/:board-id/:board-title" element={<Board />} />
             </Routes>
         </Router>
     )

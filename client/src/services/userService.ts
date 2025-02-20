@@ -1,5 +1,4 @@
 import UserModel from "../models/userModel";
-//import BoardModel from "../models/boardModel";
 
 const url = 'http://localhost:3000/api/user';
 
@@ -80,3 +79,4 @@ export async function fetchUserProfile(token: string): Promise<UserProfile> {
         return { success: false, message: "An error occurred" }; 
     }
 }
+

@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import * as userService from '../services/userService.js';
-import UserModel from '../models/userModel.js';
 
 export const createUser = async (req: Request, res: Response) => {
     const { name, surname, email, password } = req.body;

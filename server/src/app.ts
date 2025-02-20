@@ -8,6 +8,7 @@ import taskRouter from './routes/taskRoutes.js';
 import userRouter from './routes/userRoutes.js';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
+import boardRouter from './routes/boardRoutes.js';
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ app.use(express.static(path.join(__dirname, '..')));
 connectDatabase();
 
 app.use('/api/user', userRouter);
+app.use('/api/board', boardRouter);
 app.use('/api/columns', columnRouter, taskRouter);
 
 const clientPath = path.join(__dirname, '..', '..', 'client', 'dist'); 
