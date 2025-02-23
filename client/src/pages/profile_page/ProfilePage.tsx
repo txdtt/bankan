@@ -3,7 +3,7 @@ import { fetchUserProfile } from '../../services/userService';
 import UserModel from '../../models/userModel';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import styles  from './ProfilePage.module.css'
-import { createBoard } from '../../services/boardService';
+import { createBoard, insertBoardInUser } from '../../services/boardService';
 
 const ProfilePage = () => {
     const [user, setUser] = useState<UserModel | null>(null);
@@ -24,7 +24,6 @@ const ProfilePage = () => {
         const fetchProfile = async (token: string) => {
             try {
                 const response = await fetchUserProfile(token);
-                console.log("response: ", response);
 
                 if (response.success) {
                     setUser(response.user || null);
@@ -61,7 +60,11 @@ const ProfilePage = () => {
             setError(response.message || "Board creation failed, please try again.");
         }
 
-        navigate(`/b/${response.board?._id}/${boardTitle}`)
+        if (response.board?._id) {
+            const toBoardId = response.board._id;
+            await insertBoardInUser(userId, response.board._id);
+            navigate(`/b/${toBoardId}/${boardTitle}`)
+        }
 
         setShowDialog(false);
     }
@@ -72,7 +75,6 @@ const ProfilePage = () => {
             {user ?(
                 <div>
                     <h1>Olá, {user.name} {user.surname}</h1>
-                    <p>Email: {user.email}</p>
                     <ul>
                         {user.boards.map((board) => (
                             <li key={board._id}>

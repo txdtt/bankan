@@ -4,26 +4,35 @@ import styles from './ColumnsContainer.module.css'
 import { closestCenter, DndContext, DragEndEvent } from '@dnd-kit/core';
 import ColumnModel from '../../models/columnModel';
 
-import { v4 as uuidv4 } from 'uuid';
 import TaskModel from '../../models/taskModel';
 import { Socket } from 'socket.io-client';
+import { deleteColumnById, getColumns, postColumn } from '../../services/boardService';
 
 type ColumnsContainerProps = {
     socket: Socket;
+    boardId: string;
 }
 
-const ColumnsContainer = ({ socket }: ColumnsContainerProps) => {
+const ColumnsContainer = ({ socket, boardId }: ColumnsContainerProps) => {
     const [columns, setColumns] = useState<ColumnModel[]>([]);
     const [isAddingColumn, setIsAddingColumn] = useState(false);
 
     const emitColumnsState = (newColumns: ColumnModel[]) => {
-        //console.log('newColumns: ', newColumns);
         socket.emit('updateColumns', newColumns);
     }
 
     useEffect(() => {
+        const fetchColumns = async () => {
+            console.log('boardId (ColumnsContainer): ', boardId);
+            const response = await getColumns(boardId);
+            console.log('response (ColumnsContainer); ', response);
+            setColumns(response);
+        }
+        fetchColumns();
+    }, [])
+
+    useEffect(() => {
         socket.on('columnsUpdated', (updatedColumns) => {
-            //console.log('newColumns: ', updatedColumns);
             setColumns([...updatedColumns]);
         });
 
@@ -38,7 +47,7 @@ const ColumnsContainer = ({ socket }: ColumnsContainerProps) => {
         }
 
         const newColumn: ColumnModel = {
-            _id: uuidv4(),
+            _id: "",
             title: columnTitle,
             tasks: [],
         };
@@ -46,6 +55,7 @@ const ColumnsContainer = ({ socket }: ColumnsContainerProps) => {
         const newColumns = [...columns, newColumn];
         setColumns(newColumns);
         emitColumnsState(newColumns)
+        postColumn(columnTitle, boardId);
         setIsAddingColumn(false);
     }
 
@@ -148,6 +158,7 @@ const ColumnsContainer = ({ socket }: ColumnsContainerProps) => {
         )
 
         setColumns(updatedColumns);
+        deleteColumnById(columnId, boardId);
         emitColumnsState(updatedColumns);
     }
 

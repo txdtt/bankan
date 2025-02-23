@@ -37,6 +37,7 @@ export async function authenticateUser(email: string, password: string): Promise
 
         const data: AuthResponse = await response.json(); 
 
+
         if (!response.ok) {
             return { success: false, message: data.message || "Login failed" };
         }

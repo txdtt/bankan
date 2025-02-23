@@ -59,7 +59,7 @@ export const authenticateUser = async (email: string, password: string) => {
 
 export const getUserProfile = async (userId: string) => {
     try {
-        const user = await UserModel.findById(userId).select('-password');
+        const user = await UserModel.findById(userId).populate('boards').select('-password');
 
         if (!user) {
             return { success: false, message: 'User not found.'};

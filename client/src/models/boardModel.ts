@@ -1,11 +1,11 @@
-import ColumnsContainerModel from "./columnsContainerModel";
+import ColumnModel from "./columnModel";
 import UserModel from "./userModel";
 
 export type BoardModel = {
     _id: string;
     title: string;
     members: UserModel[];
-    columnsContainer: ColumnsContainerModel;  
+    columns: ColumnModel[];  
 };
 
 export default BoardModel;

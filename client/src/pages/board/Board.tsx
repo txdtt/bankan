@@ -1,18 +1,18 @@
+import { useParams } from "react-router-dom";
 import ColumnsContainer from "../../components/columnsContainer/ColumnsContainer";
 import { io } from 'socket.io-client';
 
-const socket = io('http://localhost:3000');
-
-socket.on('connect', () => {
-    console.log(`Connected with socket ID: ${socket.id}`)
-})
-
 const Board = () => {
+    const socket = io('http://localhost:3000');
+
+    const { boardId, boardTitle } = useParams();
+
     return (
         <>
-            <ColumnsContainer socket={socket}/>
+            <h1>{boardTitle}</h1>
+            <ColumnsContainer socket={socket} boardId={boardId || ""} />
         </>
-    )
+    );
 }
 
 export default Board;

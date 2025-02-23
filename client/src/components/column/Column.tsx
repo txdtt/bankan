@@ -30,7 +30,7 @@ const Column: React.FC<{
     });
 
     useEffect(() => {
-        console.log("Column updated:", column);
+        //console.log("Column updated:", column);
     }, [column]);
 
     const addTask = () => {

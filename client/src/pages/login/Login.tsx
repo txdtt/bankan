@@ -23,7 +23,6 @@ const Login = () => {
             if (response.user) {
                 localStorage.setItem("username", response.user?.username);
                 const username = response.user.username;
-                console.log("username: ", username);
                 navigate(`/u/${username}`);
             } else {
                 setError(response.message || "Login failed, please try again.");
