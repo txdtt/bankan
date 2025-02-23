@@ -1,10 +1,10 @@
 import { useParams } from "react-router-dom";
 import ColumnsContainer from "../../components/columnsContainer/ColumnsContainer";
-import { io } from 'socket.io-client';
+import { Socket } from 'socket.io-client';
 
-const Board = () => {
-    const socket = io('http://localhost:3000');
-
+const Board: React.FC<{
+    socket: Socket;
+}> = ({ socket }) => {
     const { boardId, boardTitle } = useParams();
 
     return (
