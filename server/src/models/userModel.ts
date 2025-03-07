@@ -8,6 +8,7 @@ export type User = Document & {
     email: string;
     password: string;
     boards: mongoose.Types.ObjectId[];
+    invites: mongoose.Types.ObjectId[];
     matchPassword(enteredPassword: string): Promise<boolean>;
 }
 
@@ -17,7 +18,8 @@ const userSchema: Schema = new Schema<User>({
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true, lowercase: true},
     password: { type: String, required: true },
-    boards: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Board' }]
+    boards: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Board' }],
+    invites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Invite' }]
 });
 
 

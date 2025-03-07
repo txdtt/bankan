@@ -41,7 +41,16 @@ export const authenticateUser = async (email: string, password: string) => {
         return {success: false, message: 'Invalid email or password!' };
     }
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET as string, { expiresIn: "1h"});
+    const payload = {
+        id: user._id,
+        username: user.username, 
+        name: user.name, 
+        surname: user.surname,
+        email: user.email
+    };
+
+    // Signing the JWT with the payload
+    const token = jwt.sign(payload, process.env.JWT_SECRET as string, { expiresIn: "1h" });
 
     return {
         success: true,

@@ -23,6 +23,10 @@ export const insertBoardInUser = async (userId: string, boardId: string) => {
     return await user.save();
 }
 
+export const deleteBoard = async (boardId: string) => {
+    return BoardModel.findByIdAndDelete(boardId);
+}
+
 export const getColumns = async (boardId: string) => {
     const ObjectIdBoardId = new Types.ObjectId(boardId);
     return await ColumnModel.find({ boardId: ObjectIdBoardId});
@@ -60,4 +64,8 @@ export const updateColumnTitle = async (columnId: string, title: string
     await column.save();
 
     return { success: true, message: 'Column title updated successfully!' };
+}
+
+export const inviteUser = async (email: string, boardId: string) => {
+
 }

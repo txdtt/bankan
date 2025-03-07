@@ -4,7 +4,6 @@ export type InvitationModel = Document & {
     receiver: string;
     board: string; 
     status: string;
-    createdAt: Date;
 }
 
 export default InvitationModel;

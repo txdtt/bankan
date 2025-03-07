@@ -9,8 +9,12 @@ boardRouter.post('/insert-board-in-user', boardController.insertBoardInUser);
 
 boardRouter.get('/:boardId/get-columns', boardController.getColumns);
 
+boardRouter.delete('/:boardId', boardController.deleteBoard);
+
 boardRouter.post('/:boardId/add-column', boardController.addColumn);
 
 boardRouter.delete('/:boardId/:id', boardController.deleteColumnById);
+
+boardRouter.post('/:boardId/invite', boardController.inviteUser);
 
 export default boardRouter;

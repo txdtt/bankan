@@ -17,20 +17,15 @@ const Login = () => {
 
         if (!response.success) {
             setError(response.message || "Login failed, please try again.");
-        } else if (response.token){
+        } else if (response.token && response.user){
             localStorage.setItem("token", response.token);
-
-            if (response.user) {
-                localStorage.setItem("username", response.user?.username);
-                const username = response.user.username;
-                navigate(`/u/${username}`);
-            } else {
-                setError(response.message || "Login failed, please try again.");
-            }
+            localStorage.setItem("username", response.user.username);
+            navigate(`/u/${response.user.username}`);
+        } else {
+            setError(response.message || "Login failed, please try again.");
         }
-
     }
-
+    
     return (
         <form onSubmit={handleSubmit}>
             <div>

@@ -5,11 +5,11 @@ import { closestCenter, DndContext, DragEndEvent } from '@dnd-kit/core';
 import ColumnModel from '../../models/columnModel';
 
 import TaskModel from '../../models/taskModel';
-import { Socket } from 'socket.io-client';
 import { deleteColumnById, getColumns, postColumn } from '../../services/boardService';
+import { Socket } from 'socket.io-client';
 
 type ColumnsContainerProps = {
-    socket: Socket;
+    socket: Socket,
     boardId: string;
 }
 
@@ -18,7 +18,9 @@ const ColumnsContainer = ({ socket, boardId }: ColumnsContainerProps) => {
     const [isAddingColumn, setIsAddingColumn] = useState(false);
 
     const emitColumnsState = (newColumns: ColumnModel[]) => {
-        socket.emit('updateColumns', newColumns);
+        if (socket) {
+            socket.emit('updateColumns', newColumns);
+        }
     }
 
     useEffect(() => {
@@ -32,12 +34,14 @@ const ColumnsContainer = ({ socket, boardId }: ColumnsContainerProps) => {
     }, [])
 
     useEffect(() => {
-        socket.on('columnsUpdated', (updatedColumns) => {
-            setColumns([...updatedColumns]);
-        });
+        if (socket) {
+            socket.on('columnsUpdated', (updatedColumns) => {
+                setColumns([...updatedColumns]);
+            });
 
-        return () => {
-            socket.off('columnsUpdated');
+            return () => {
+                socket.off('columnsUpdated');
+            }
         }
     }, [socket]);
 

@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import * as boardService from '../services/boardService.js';
-import { io } from '../app.js';
 
 export const createBoard = async (req: Request, res: Response) => {
     const { title, userId } = req.body;
@@ -25,6 +24,22 @@ export const insertBoardInUser = async (req: Request, res: Response) => {
         if (error instanceof Error) {
             res.status(500).json({ error: 'Failed to insert board in user: ', details: error.message });
         } 
+    }
+}
+
+export const deleteBoard = async (req: Request, res: Response) => {
+    const { boardId } = req.body;
+
+    try {
+        const board = boardService.deleteBoard(boardId);
+        if (!board) {
+            return res.status(404).json({ message: 'Board not found!' });
+        }
+        res.json({ message: 'Board deleted' });
+    } catch (error) {
+        if (error instanceof Error) {
+            res.status(500).json({ error: 'Failed to delete board: ', details: error.message });
+        }
     }
 }
 
@@ -81,6 +96,19 @@ export const updateColumnTitle = async (req: Request, res: Response) => {
     } catch (error) {
         if (error instanceof Error) {
             return res.status(500).json({ error: 'Error patching column', details: error.message });
+        } 
+    }
+}
+
+export const inviteUser = async (req: Request, res: Response) => {
+    const { boardId, email } = req.body;
+
+    try {
+        const newUserInBoard = await boardService.inviteUser(boardId, email);
+        res.status(201).send(newUserInBoard);
+    } catch (error) {
+        if (error instanceof Error) {
+            return res.status(500).json({ error: 'Error inviting user', details: error.message });
         } 
     }
 }
