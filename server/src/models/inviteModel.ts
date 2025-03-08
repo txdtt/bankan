@@ -1,17 +1,15 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export type Invite = Document & {
-    sender: mongoose.Types.ObjectId; 
-    receiver: mongoose.Types.ObjectId;
+    sender: string; 
+    receiver: string;
     board: mongoose.Types.ObjectId; 
-    status: string;
 };
 
 const InviteSchema: Schema = new Schema<Invite>({
-    sender: [{ type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' }],  
-    receiver: [{ type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' }],  
+    sender: { type: String, required: true },
+    receiver: { type: String, required: true },
     board: [{ type: mongoose.Schema.Types.ObjectId, required: true, ref: 'board' }],  
-    status: { type: String, required: true },
 });
 
 export const InviteModel = mongoose.model<Invite>('Invite', InviteSchema);

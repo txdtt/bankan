@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 import BoardModel from "../models/boardModel.js"
 import { ColumnModel, Column } from '../models/columnModel.js';
 import UserModel from '../models/userModel.js';
+import InviteModel from '../models/inviteModel.js';
 
 export const createBoard = async (title: string, userId: string) => {
     const newBoard = new BoardModel({ title: title, members: [userId], columnsContainer: []}) ;
@@ -17,7 +18,14 @@ export const insertBoardInUser = async (userId: string, boardId: string) => {
         throw new Error("User not found");
     }
     
+    const boardExists = user.boards.some(board => board.toString() === boardId);
+
+    if (boardExists) {
+        return { success: false, message: "User is already a member of this board!" };
+    }
+
     const objectIdBoardId = new Types.ObjectId(boardId);
+
     user.boards.push(objectIdBoardId);
 
     return await user.save();
@@ -66,6 +74,54 @@ export const updateColumnTitle = async (columnId: string, title: string
     return { success: true, message: 'Column title updated successfully!' };
 }
 
-export const inviteUser = async (email: string, boardId: string) => {
+export const inviteUser = async (boardId: string, senderEmail: string, receiverEmail: string) => {
+    try {
+        if (!Types.ObjectId.isValid(boardId)) {
+            return { success: false, message: "Invalid board ID format!" };
+        }
 
+        const objectIdBoardId = new Types.ObjectId(boardId);
+
+        const newInvite = new InviteModel({ sender: senderEmail, receiver: receiverEmail, boardId: objectIdBoardId });
+
+        const receiverUser = await UserModel.findOne({ email: receiverEmail });
+
+        if (!receiverUser) {
+            return { success: false, message: "User not found!" };
+        }
+
+        await newInvite.save();
+
+        receiverUser.invites.push(newInvite._id as Types.ObjectId);
+
+        await receiverUser.save();
+
+        return { success: true, message: "Invitation sent successfully!" };
+    } catch (error) {
+        console.error("Error inviting user:", error);
+        return { success: false, message: "An error occurred while inviting the user." };
+    }
+}
+
+export const acceptInvite = async (userId: string, boardId: string) => {
+    try {
+        await insertBoardInUser(userId, boardId); 
+
+        const objectIdBoardId = new Types.ObjectId(boardId);
+
+        const board = await BoardModel.findById(objectIdBoardId);
+
+        if (!board) {
+            return { success: false, message: "Board not found!"};
+        }
+
+        const objectIdUserId= new Types.ObjectId(userId);
+
+        board.members.push(objectIdUserId);
+
+        return await board.save();
+    } catch (error) {
+        console.error("Error accepting invite:", error);
+        return { success: false, message: "An error occurred while accepting the invite." };
+    }
 }

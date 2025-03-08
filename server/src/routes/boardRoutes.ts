@@ -17,4 +17,6 @@ boardRouter.delete('/:boardId/:id', boardController.deleteColumnById);
 
 boardRouter.post('/:boardId/invite', boardController.inviteUser);
 
+boardRouter.post('/:boardId/accept-invite', boardController.acceptInvite);
+
 export default boardRouter;

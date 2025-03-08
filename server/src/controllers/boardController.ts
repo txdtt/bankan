@@ -101,14 +101,27 @@ export const updateColumnTitle = async (req: Request, res: Response) => {
 }
 
 export const inviteUser = async (req: Request, res: Response) => {
-    const { boardId, email } = req.body;
+    const { boardId, senderEmail, receiverEmail } = req.body;
 
     try {
-        const newUserInBoard = await boardService.inviteUser(boardId, email);
+        const newUserInBoard = await boardService.inviteUser(boardId, senderEmail, receiverEmail);
         res.status(201).send(newUserInBoard);
     } catch (error) {
         if (error instanceof Error) {
             return res.status(500).json({ error: 'Error inviting user', details: error.message });
+        } 
+    }
+}
+
+export const acceptInvite = async (req: Request, res: Response) => {
+    const { userId, boardId } = req.body;
+
+    try {
+        const newUserInBoard = await boardService.acceptInvite(userId, boardId);
+        res.status(201).send(newUserInBoard);
+    } catch (error) {
+        if (error instanceof Error) {
+            return res.status(500).json({ error: 'Error accepting invite', details: error.message });
         } 
     }
 }
