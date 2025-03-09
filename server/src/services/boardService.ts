@@ -28,6 +28,16 @@ export const insertBoardInUser = async (userId: string, boardId: string) => {
 
     user.boards.push(objectIdBoardId);
 
+    await user.save();
+
+    const board = await BoardModel.findById(objectIdBoardId);
+
+    if (!board) {
+        return { success: false, message: "Board not found!" };
+    }
+
+    board.members.push(ObjectIdUserId);
+
     return await user.save();
 }
 
@@ -82,7 +92,7 @@ export const inviteUser = async (boardId: string, senderEmail: string, receiverE
 
         const objectIdBoardId = new Types.ObjectId(boardId);
 
-        const newInvite = new InviteModel({ sender: senderEmail, receiver: receiverEmail, boardId: objectIdBoardId });
+        const newInvite = new InviteModel({ sender: senderEmail, receiver: receiverEmail, board: objectIdBoardId });
 
         const receiverUser = await UserModel.findOne({ email: receiverEmail });
 
@@ -103,23 +113,63 @@ export const inviteUser = async (boardId: string, senderEmail: string, receiverE
     }
 }
 
-export const acceptInvite = async (userId: string, boardId: string) => {
+export const fetchUserInvites = async (userId: string) => {
     try {
-        await insertBoardInUser(userId, boardId); 
-
-        const objectIdBoardId = new Types.ObjectId(boardId);
-
-        const board = await BoardModel.findById(objectIdBoardId);
-
-        if (!board) {
-            return { success: false, message: "Board not found!"};
-        }
-
         const objectIdUserId= new Types.ObjectId(userId);
 
-        board.members.push(objectIdUserId);
+        const user = await UserModel.findById(objectIdUserId);
 
-        return await board.save();
+        if (!user) {
+            return { success: false, message: "User not found!" };
+        }
+
+        const invites = await InviteModel.find({
+            _id: { $in: user.invites },
+        }).populate('board');
+
+        const formattedInvites = invites.map(invite => ({
+            _id: invite._id,
+            sender: invite.sender,
+            receiver: invite.receiver,
+            board: invite.board
+        }));
+
+        return ({ success: true, invites: formattedInvites });
+    } catch (error) {
+        console.error("Error fetching user invites:", error);
+        return { success: false, message: "An error occurred while fetching user invites." };
+    }
+}
+
+export const acceptInvite = async (inviteId: string) => {
+    try {
+        const objectIdInviteId= new Types.ObjectId(inviteId);
+
+        const invite = await InviteModel.findById(objectIdInviteId);
+
+        if (!invite) {
+            return { success: false, message: "Invite not found!" };
+        }
+
+        const user = await UserModel.findOne({ email: invite.receiver });
+
+        if (!user) {
+            return { success: false, message: "User not found!" };
+        }
+
+        await UserModel.findByIdAndUpdate(
+            user._id,
+            { $addToSet: { boards: invite.board }}
+        );
+
+        await insertBoardInUser(user._id as string, invite.board.toString())
+
+        await UserModel.findByIdAndUpdate(
+            user._id,
+            { $pull: { invites: inviteId }}
+        );
+
+        return { success: true, message: "Invite accepted!" };
     } catch (error) {
         console.error("Error accepting invite:", error);
         return { success: false, message: "An error occurred while accepting the invite." };

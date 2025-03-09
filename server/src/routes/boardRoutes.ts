@@ -15,8 +15,10 @@ boardRouter.post('/:boardId/add-column', boardController.addColumn);
 
 boardRouter.delete('/:boardId/:id', boardController.deleteColumnById);
 
+boardRouter.get('/invites/user/:userId', boardController.getUserInvites);
+
 boardRouter.post('/:boardId/invite', boardController.inviteUser);
 
-boardRouter.post('/:boardId/accept-invite', boardController.acceptInvite);
+boardRouter.put('/invites/:inviteId/accept', boardController.acceptInvite);
 
 export default boardRouter;

@@ -9,7 +9,7 @@ export type Invite = Document & {
 const InviteSchema: Schema = new Schema<Invite>({
     sender: { type: String, required: true },
     receiver: { type: String, required: true },
-    board: [{ type: mongoose.Schema.Types.ObjectId, required: true, ref: 'board' }],  
+    board: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'Board' },  
 });
 
 export const InviteModel = mongoose.model<Invite>('Invite', InviteSchema);

@@ -1,4 +1,4 @@
-export type InvitationModel = Document & {
+export type InviteModel = Document & {
     _id: string;
     sender: string; 
     receiver: string;
@@ -6,4 +6,4 @@ export type InvitationModel = Document & {
     status: string;
 }
 
-export default InvitationModel;
+export default InviteModel;

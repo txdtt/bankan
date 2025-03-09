@@ -101,8 +101,16 @@ export const updateColumnTitle = async (req: Request, res: Response) => {
 }
 
 export const inviteUser = async (req: Request, res: Response) => {
-    const { boardId, senderEmail, receiverEmail } = req.body;
-
+    const boardId = req.params.boardId;
+    const { senderEmail, receiverEmail } = req.body;
+    
+    if (!boardId || !senderEmail || !receiverEmail) {
+        return res.status(400).json({ 
+            success: false, 
+            message: "Missing required fields: boardId, senderEmail, and receiverEmail are required" 
+        });
+    }
+    
     try {
         const newUserInBoard = await boardService.inviteUser(boardId, senderEmail, receiverEmail);
         res.status(201).send(newUserInBoard);
@@ -110,15 +118,29 @@ export const inviteUser = async (req: Request, res: Response) => {
         if (error instanceof Error) {
             return res.status(500).json({ error: 'Error inviting user', details: error.message });
         } 
+        return res.status(500).json({ error: 'Unknown error occurred' });
     }
 }
 
 export const acceptInvite = async (req: Request, res: Response) => {
-    const { userId, boardId } = req.body;
+    const inviteId  = req.params.inviteId;
 
     try {
-        const newUserInBoard = await boardService.acceptInvite(userId, boardId);
-        res.status(201).send(newUserInBoard);
+        const inviteAccepted = await boardService.acceptInvite(inviteId);
+        res.status(201).send(inviteAccepted);
+    } catch (error) {
+        if (error instanceof Error) {
+            return res.status(500).json({ error: 'Error accepting invite', details: error.message });
+        } 
+    }
+}
+
+export const getUserInvites = async (req: Request, res: Response) => {
+    const { userId } = req.params;
+
+    try {
+        const getInvites = await boardService.fetchUserInvites(userId);
+        res.status(200).send(getInvites);
     } catch (error) {
         if (error instanceof Error) {
             return res.status(500).json({ error: 'Error accepting invite', details: error.message });

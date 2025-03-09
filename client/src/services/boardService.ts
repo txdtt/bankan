@@ -124,13 +124,79 @@ export async function deleteColumnById(columnId: string, boardId: string) {
     }
 }
 
-export const sendInvite = async (emailSender: string, emailReceiver: string, boardId: string) => {
-    const response = await fetch(`${url}/invite`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ emailSender, emailReceiver, boardId }),
-    });
-    
-    const data = await response.json();
-    console.log('Invite sent:', data);
+export async function inviteUserToBoard(token: string, boardId: string, senderEmail: string, receiverEmail: string) {
+    try {
+        const response = await fetch(`${url}/${boardId}/invite`, {
+            method: 'POST',
+            headers: {
+                'Content-type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                senderEmail,
+                receiverEmail
+            })
+        });
+        
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error inviting user:', error);
+        return { success: false, message: 'Failed to send invitation' };
+    }
+}
+
+
+export async function fetchUserInvites(token: string, userId: string) {
+    try {
+        const response = await fetch(`${url}/invites/user/${userId}`, {
+            method: 'GET',
+            headers: {
+                'Content-type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error fetching invites:', error);
+        return { success: false, message: 'Failed to fetch invites' };
+    }
+}
+
+export const acceptInvite = async (token: string, inviteId: string) => {
+    try {
+        const response = await fetch(`${url}/invites/${inviteId}/accept`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error accepting invite:', error);
+        return { success: false, message: 'Failed to accept invite' };
+    }
+};
+
+// Decline an invite
+export const declineInvite = async (token: string, inviteId: string) => {
+    try {
+        const response = await fetch(`${url}/invites/${inviteId}/decline`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+      
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error declining invite:', error);
+        return { success: false, message: 'Failed to decline invite' };
+    }
 };
